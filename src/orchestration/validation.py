@@ -159,6 +159,8 @@ def build_answer_packet(library, session, draft, policy):
     """验证完整分析草稿，并生成只引用真实候选的正式答案包。"""
     validate_policy(policy)
     _validate_session(library, session)
+    if session["policy"] != policy:
+        _invalid("验证策略与建立调用会话时的策略不一致")
     validate_document("analysis-draft.schema.json", draft)
     if draft["session_id"] != session["session_id"] or draft["library_version"] != library.version:
         raise ValueError("SOURCE_VERSION_MISMATCH: 分析草稿与调用会话版本不一致")

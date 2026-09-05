@@ -80,6 +80,7 @@ def create_call_session(library, request, mode, policy, retrieval_mode="hybrid",
         "mode": mode,
         "status": "ready" if candidates else "no_relevant_knowledge",
         "request": request,
+        "policy": policy,
         "retrieval": {
             "mode": effective_mode,
             "queries": [request["question"]] + request["query_expansions"],

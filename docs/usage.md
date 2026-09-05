@@ -14,7 +14,25 @@
 
 ## 让 Agent 回答
 
-给 Agent 程序目录、实际知识库路径和可用解释器，并让它读取 `skills/second-brain/SKILL.md`。限定纳瓦尔视角时也可加载 `skills/naval-almanack/SKILL.md`。它会整理问题、检索、回读出处、检查关系和条件，再给建议。Skill 没有安装到全局目录。
+给 Agent 程序目录、实际知识库路径和可用解释器，并让它读取 `skills/second-brain/SKILL.md`。限定纳瓦尔视角时也可加载 `skills/naval-almanack/SKILL.md`。Skill 没有安装到全局目录。
+
+正式的书库驱动回答使用两阶段调用。先准备 `call-request.json`，区分用户事实、约束、假设和检索扩展词：
+
+```bash
+.venv-mvp/bin/python -m src.interfaces.cli --library data/library analyze \
+  --request call-request.json --mode standard --output call-session.json
+```
+
+Agent 阅读会话中的完整候选、证据和关系，为每个候选填写采用或淘汰决定，形成 `analysis-draft.json`。再运行：
+
+```bash
+.venv-mvp/bin/python -m src.interfaces.cli --library data/library validate-analysis \
+  --session call-session.json --draft analysis-draft.json --output answer-packet.json
+```
+
+默认不覆盖已有输出；确认覆盖时显式增加 `--replace`。自定义调用策略通过两条命令相同的 `--policy <文件>` 传入。向量不可用时 `analyze` 会降级到关键词并在调用账单标记，不伪装成混合检索。
+
+Agent 只依据验证后的答案包表达正式书库回答。答案包包含调用账单、知识见证卡、交叉验证、综合裁决、行动和来源；一般常识补充必须与书库知识分开。
 
 示例指令：“读取项目的 second-brain Skill，使用项目内 .venv-mvp/bin/python 和 data/library。我的问题是：我每天都在接零散工作，怎样积累长期价值？请核对原文，区分书中观点与应用建议。”
 
@@ -28,4 +46,4 @@
 
 首本仅《纳瓦尔宝典》主体及作者两篇写作；跳过前置序言、书单、致谢等。无可靠页码，引用章节和证据 ID。引用汇编中的相邻片段不代表原书连续上下文。原文重新核验需要用户提供同指纹源文件。
 
-检索可能漏掉相关卡片，也可能误配。Agent 必须复核，必要时有针对性再搜；不能用排名当正确性保证。当前没有 Web UI、常驻服务或已验收多作者讨论。
+检索可能漏掉相关卡片，也可能误配。Agent 必须逐项采用或淘汰；不能用排名当正确性保证。调用验证能检查结构、ID、版本和引用，不证明 Agent 的语义判断必然正确。当前没有 Web UI、常驻服务或已验收多作者讨论。

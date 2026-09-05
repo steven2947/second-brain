@@ -39,6 +39,7 @@ class OrchestrationSessionTests(unittest.TestCase):
         )
         self.assertEqual(session, repeated)
         self.assertEqual(session["library_version"], self.library.version)
+        self.assertEqual(session["policy"], self.policy)
         self.assertRegex(session["session_id"], r"^call\.[a-f0-9]{24}$")
         self.assertEqual(session["status"], "ready")
         self.assertEqual(session["retrieval"]["queries"], ["如何处理一个模糊任务？", "模糊任务 小步骤"])

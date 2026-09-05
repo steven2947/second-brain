@@ -3,7 +3,7 @@
   "title": "第二大脑检索会话 v1",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "session_id", "library_version", "mode", "status", "request", "retrieval", "candidates"],
+  "required": ["schema_version", "session_id", "library_version", "mode", "status", "request", "policy", "retrieval", "candidates"],
   "properties": {
     "schema_version": {"const": 1},
     "session_id": {"type": "string", "pattern": "^call\\.[a-f0-9]{24}$"},
@@ -11,6 +11,7 @@
     "mode": {"enum": ["quick", "standard", "deep"]},
     "status": {"enum": ["ready", "no_relevant_knowledge"]},
     "request": {"type": "object"},
+    "policy": {"type": "object"},
     "retrieval": {
       "type": "object", "additionalProperties": false,
       "required": ["mode", "queries", "books_searched", "filters", "degraded", "degraded_reason"],

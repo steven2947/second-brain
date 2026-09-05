@@ -174,6 +174,12 @@ class OrchestrationValidationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "SOURCE_VERSION_MISMATCH"):
             build_answer_packet(self.library, stale, draft, self.policy)
 
+    def test_validation_must_use_same_policy_snapshot(self):
+        changed = copy.deepcopy(self.policy)
+        changed["show_rejected_candidates"] = False
+        with self.assertRaisesRegex(ValueError, "INVALID_ANALYSIS_DRAFT.*策略"):
+            build_answer_packet(self.library, self.session, valid_draft(self.session), changed)
+
 
 if __name__ == "__main__":
     unittest.main()

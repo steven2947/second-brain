@@ -1,12 +1,50 @@
 """第二大脑本地 CLI；只读查询与显式蒸馏准备、验证、发布分开。"""
 import argparse
 import json
+import os
 import sys
+import tempfile
 from pathlib import Path
 from src.knowledge.library import Library, validate_library, publish_library, read_json
 from src.retrieval.search import SearchEngine
 from src.distillation.jobs import prepare_job, complete_job
 from src.distillation.assemble import assemble_library
+
+
+def _read_input(path, label):
+    """读取显式 JSON 输入；拒绝目录与符号链接。"""
+    source = Path(path)
+    if source.is_symlink() or not source.is_file():
+        raise ValueError(f"INVALID_ARGUMENT: {label} 必须是普通文件")
+    return read_json(source)
+
+
+def _write_json_atomic(path, document, replace=False):
+    """原子写入 JSON；默认不覆盖既有目标。"""
+    target = Path(path)
+    parent = target.parent
+    if target.is_symlink() or target.is_dir() or parent.is_symlink() or not parent.is_dir():
+        raise ValueError("INVALID_ARGUMENT: 输出必须是现有普通目录中的具体文件")
+    if target.exists() and not replace:
+        raise ValueError("OUTPUT_EXISTS: 输出文件已存在；确认后使用 --replace")
+    descriptor, temporary = tempfile.mkstemp(prefix=".call-output-", suffix=".json", dir=parent)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+            json.dump(document, handle, ensure_ascii=False, indent=2)
+            handle.write("\n")
+            handle.flush()
+            os.fsync(handle.fileno())
+        if replace:
+            os.replace(temporary, target)
+        else:
+            try:
+                os.link(temporary, target)
+            except FileExistsError as exc:
+                raise ValueError("OUTPUT_EXISTS: 输出文件已存在；确认后使用 --replace") from exc
+            Path(temporary).unlink()
+        return str(target.resolve())
+    finally:
+        Path(temporary).unlink(missing_ok=True)
 
 
 def main(argv=None):
@@ -30,6 +68,10 @@ def main(argv=None):
     bundle = commands.add_parser('bundle');bundle.add_argument('--review',action='append',required=True);bundle.add_argument('--destination',required=True)
     author_skill = commands.add_parser('author-skill');author_skill.add_argument('--compiled',required=True);author_skill.add_argument('--destination',required=True)
     package = commands.add_parser('package');package.add_argument('--project',default='.');package.add_argument('--destination',required=True);package.add_argument('--author-skill')
+    analyze = commands.add_parser('analyze');analyze.add_argument('--request',required=True);analyze.add_argument('--mode',choices=['quick','standard','deep'])
+    analyze.add_argument('--retrieval-mode',choices=['keyword','semantic','hybrid'],default='hybrid');analyze.add_argument('--policy');analyze.add_argument('--output',required=True);analyze.add_argument('--replace',action='store_true')
+    verify_analysis = commands.add_parser('validate-analysis');verify_analysis.add_argument('--session',required=True);verify_analysis.add_argument('--draft',required=True)
+    verify_analysis.add_argument('--policy');verify_analysis.add_argument('--output',required=True);verify_analysis.add_argument('--replace',action='store_true')
     args = parser.parse_args(argv)
     try:
         version = None
@@ -47,6 +89,22 @@ def main(argv=None):
         elif args.command == 'package':
             from src.interfaces.delivery import build_release
             result = build_release(args.project,args.destination,args.library,args.author_skill)
+        elif args.command == 'analyze':
+            from src.orchestration.policy import load_policy
+            from src.orchestration.session import create_call_session
+            library = Library(args.library);version = library.version
+            policy = load_policy(args.policy)
+            session = create_call_session(library,_read_input(args.request,'调用请求'),args.mode or policy['default_mode'],policy,args.retrieval_mode)
+            path = _write_json_atomic(args.output,session,args.replace)
+            result = {'path':path,'session_id':session['session_id'],'status':session['status'],'candidates':len(session['candidates'])}
+        elif args.command == 'validate-analysis':
+            from src.orchestration.policy import load_policy
+            from src.orchestration.validation import build_answer_packet
+            library = Library(args.library);version = library.version
+            session = _read_input(args.session,'调用会话');draft = _read_input(args.draft,'分析草稿')
+            packet = build_answer_packet(library,session,draft,load_policy(args.policy))
+            path = _write_json_atomic(args.output,packet,args.replace)
+            result = {'path':path,'session_id':packet['session_id'],'witnesses':len(packet['witness_cards']),'actions':len(packet['actions'])}
         else:
             library = Library(args.library);version = library.version
             if args.command == 'books':result = library.list_books(args.author)
