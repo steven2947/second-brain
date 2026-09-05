@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "第二大脑来源证据 v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "id", "book_id", "chapter", "source_path", "source_sha256", "start", "end", "text"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "id": {"type": "string", "minLength": 1},
+    "book_id": {"type": "string", "minLength": 1},
+    "chapter": {"type": "string", "minLength": 1},
+    "source_path": {"type": "string", "minLength": 1},
+    "source_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "start": {"type": "integer", "minimum": 0},
+    "end": {"type": "integer", "minimum": 1},
+    "text": {"type": "string", "minLength": 1}
+    ,"origin": {"type": "object", "required": ["source_sha256", "paragraph_id", "start", "end"], "properties": {
+      "source_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+      "paragraph_id": {"type": "string"}, "start": {"type": "integer", "minimum": 0}, "end": {"type": "integer", "minimum": 1}
+    }, "additionalProperties": false}
+  }
+}

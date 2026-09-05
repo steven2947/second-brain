@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "edges": [{
+    "id": "relation.demo.step-review",
+    "from": "knowledge.demo.small-step",
+    "to": "knowledge.demo.review",
+    "type": "composes_with",
+    "basis": "inference",
+    "rationale": "从先执行小步骤、再检查不确定性的叙述推导出两种方法可以组合；这是系统关系标注。",
+    "evidence_ids": ["evidence.demo.step", "evidence.demo.review"]
+  }]
+}

@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "id": "evidence.demo.review",
+  "book_id": "book.demo",
+  "chapter": "根据结果调整",
+  "source_path": "sources/demo.md",
+  "source_sha256": "76e07ec8a18615def9d7587d2db4aabc0ed78c1e7bb4c0abb5dc41ca7a6329fc",
+  "start": 135,
+  "end": 208,
+  "text": "完成小步骤后，记录是否减少了原问题的不确定性。如果没有，应修改下一步，而不是仅仅增加执行次数。小步骤可以帮助启动，但不能替代对目标是否正确的判断。"
+}

@@ -1,0 +1,10 @@
+{
+  "repository": "https://github.com/kangarooking/cangjie-skill.git",
+  "tag": "v2.5.0",
+  "commit": "44692125abcdb93eab7b0e7a5ecd6ccadf92dc6f",
+  "license": "MIT",
+  "directory": "vendor/cangjie",
+  "role": "upstream_distillation_tool",
+  "integration_status": "vendored_not_integrated",
+  "verified_on": "2026-09-05"
+}

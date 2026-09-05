@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "id": "knowledge.demo.review",
+  "book_id": "book.demo",
+  "author_id": "author.project-demo",
+  "kind": "method",
+  "title": "根据不确定性是否降低调整下一步",
+  "statement": "完成动作后检查其是否减少原问题的不确定性，无效时修改下一步。",
+  "conditions": ["已经执行了一个小步骤"],
+  "boundaries": ["不能只用执行次数判断是否取得进展"],
+  "steps": ["记录仍不确定的事项", "根据结果保留或修改下一步"],
+  "evidence_ids": ["evidence.demo.review"]
+}

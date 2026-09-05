@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "id": "knowledge.demo.small-step",
+  "book_id": "book.demo",
+  "author_id": "author.project-demo",
+  "kind": "method",
+  "title": "将模糊任务转成可判断完成的小步骤",
+  "statement": "先确定一个可以实际执行并判断是否完成的小步骤。",
+  "conditions": ["任务表达模糊，难以确定下一步"],
+  "boundaries": ["不能替代对目标是否正确的判断"],
+  "steps": ["描述一个具体动作", "写出该动作的完成标志"],
+  "evidence_ids": ["evidence.demo.step", "evidence.demo.review"]
+}

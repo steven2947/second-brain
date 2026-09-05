@@ -1,0 +1,31 @@
+# 本机配置与凭据
+configs/local.json
+.env
+.env.*
+!.env.example
+.venv/
+.venv-mvp/
+.pytest_cache/
+__pycache__/
+*.py[cod]
+.DS_Store
+
+# 外部依赖由 vendor/cangjie.lock.json 锁定
+vendor/cangjie/
+
+# 私有原书、生成知识、缓存和构建物不进入源码版本
+data/originals/*
+!data/originals/README.md
+data/normalized/*
+!data/normalized/README.md
+data/library/*
+!data/library/README.md
+data/indexes/*
+!data/indexes/README.md
+data/jobs/*
+!data/jobs/README.md
+dist/*
+!dist/README.md
+
+# 本地真实书籍生成的作者参考资产
+skills/naval-almanack/

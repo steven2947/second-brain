@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "book_id": "book.naval-almanack",
+  "title": "纳瓦尔宝典",
+  "author_id": "author.naval-ravikant",
+  "author": "纳瓦尔·拉维坎特",
+  "compiler": "埃里克·乔根森",
+  "translator": "赵灿",
+  "edition": "中信出版社，2022-04，ISBN 978-7-5217-4112-4",
+  "included_ranges": [
+    {"start_heading": "第一部分 财富", "end_heading": "额外推荐"},
+    {"start_heading": "纳瓦尔的写作", "end_heading": "进一步了解纳瓦尔"}
+  ],
+  "scope_rationale": "保留财富、判断力、幸福、自我救赎、哲学五章及本人2008/2016短文。排除前置编辑材料、序言、经历表、访谈自传开场、推荐书单、站点导航、致谢和参考文献。短文中他人署名引语不归为纳瓦尔原创。"
+}

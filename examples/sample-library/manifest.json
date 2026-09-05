@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "library_id": "library.self-authored-demo",
+  "is_example": true,
+  "books": [{"id": "book.demo", "title": "把任务变成可检查的小行动（自编测试材料）", "author_id": "author.project-demo", "author": "第二大脑项目测试材料", "status": "example_only"}],
+  "cards_directory": "cards",
+  "evidence_directory": "evidence",
+  "relations_file": "relations.json"
+}

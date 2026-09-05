@@ -1,0 +1,100 @@
+{
+  "protocol": "在首次运行本组查询前固定标签与扩展问法；同一开发者设题，非独立盲测；不得用此分数代表问答准确率",
+  "cases": [
+    {
+      "id": "h01",
+      "question": "带团队时，大家为了达成考核数字牺牲了真实效果，应该检查哪里？",
+      "expansions": [
+        "员工激励 委托代理 奖励 真实价值"
+      ],
+      "expected": [
+        "judgment-principal-agent"
+      ]
+    },
+    {
+      "id": "h02",
+      "question": "对方说得无论发生什么都对，这种主张有办法检验吗？",
+      "expansions": [
+        "判断理论 可证伪 反证 检验"
+      ],
+      "expected": [
+        "judgment-falsifiability"
+      ]
+    },
+    {
+      "id": "h03",
+      "question": "学到的东西我懂，但给新同事解释就说不清，如何改进？",
+      "expansions": [
+        "基础推导 简单解释 理解 讲给别人"
+      ],
+      "expected": [
+        "judgment-foundational-explanation",
+        "judgment-reread-and-teach"
+      ]
+    },
+    {
+      "id": "h04",
+      "question": "我为了省一点钱，来回折腾三个小时，回头很懊恼。",
+      "expansions": [
+        "时间机会成本 亲做 外包 放弃"
+      ],
+      "expected": [
+        "wealth-hourly-opportunity-cost"
+      ]
+    },
+    {
+      "id": "h05",
+      "question": "朋友展示的生活让我羡慕，我是不是只看到了自己缺少的那部分？",
+      "expansions": [
+        "嫉妒 整个人生交换 比较"
+      ],
+      "expected": [
+        "life-whole-life-envy"
+      ]
+    },
+    {
+      "id": "h06",
+      "question": "每次做到一个目标就马上追逐下一个，为什么满足感这么短？",
+      "expansions": [
+        "成功 适应 欲望 幸福"
+      ],
+      "expected": [
+        "life-success-adaptation",
+        "life-desire-contract"
+      ]
+    },
+    {
+      "id": "h07",
+      "question": "我想休息，却觉得不把每分钟用来工作就是浪费生命。",
+      "expansions": [
+        "自愿休闲 时间自由 忙碌"
+      ],
+      "expected": [
+        "life-time-without-busyness",
+        "wealth-outputs-not-hours"
+      ]
+    },
+    {
+      "id": "h08",
+      "question": "没人投资也没有同事，个人能力有什么办法放大？",
+      "expansions": [
+        "代码 媒体 复制成本 杠杆"
+      ],
+      "expected": [
+        "wealth-permissionless-leverage"
+      ]
+    },
+    {
+      "id": "h09",
+      "question": "请查询明天广州南到杭州东的高铁车次。",
+      "expansions": [],
+      "expected": []
+    },
+    {
+      "id": "h10",
+      "question": "给出 C++ 协程 await_suspend 的编译器实现代码。",
+      "expansions": [],
+      "expected": []
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "source_books_root": "/absolute/path/to/books-markdown",
+  "library_root": "data/library",
+  "normalized_root": "data/normalized",
+  "index_root": "data/indexes",
+  "jobs_root": "data/jobs",
+  "pilot_book_title": "纳瓦尔宝典",
+  "pilot_status": "proposed_not_distilled",
+  "model_execution": "agent_managed",
+  "automatic_model_calls": false
+}
