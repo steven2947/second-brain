@@ -43,7 +43,7 @@
 ### 验证命令
 
 ```bash
-python -m unittest tests.test_orchestration_models -v
+python -m unittest discover -s tests -p 'test_orchestration_models.py' -v
 ```
 
 ### 建议提交
@@ -82,8 +82,9 @@ feat: define auditable call contracts and policy
 ### 验证命令
 
 ```bash
-python -m unittest tests.test_orchestration_session -v
-python -m unittest tests.test_retrieval tests.test_library -v
+python -m unittest discover -s tests -p 'test_orchestration_session.py' -v
+python -m unittest discover -s tests -p 'test_retrieval.py' -v
+python -m unittest discover -s tests -p 'test_library.py' -v
 ```
 
 ### 建议提交
@@ -125,7 +126,7 @@ feat: build version-pinned knowledge call sessions
 ### 验证命令
 
 ```bash
-python -m unittest tests.test_orchestration_validation -v
+python -m unittest discover -s tests -p 'test_orchestration_validation.py' -v
 ```
 
 ### 建议提交
@@ -174,7 +175,7 @@ python -m src.interfaces.cli --library <用户库> validate-analysis \
 ### 验证命令
 
 ```bash
-python -m unittest tests.test_orchestration_cli -v
+python -m unittest discover -s tests -p 'test_orchestration_cli.py' -v
 python -m unittest discover -s tests -v
 ```
 
