@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "第二大脑调用请求 v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "question", "goal", "facts", "constraints", "assumptions", "query_expansions"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "question": {"type": "string", "minLength": 1, "maxLength": 4000},
+    "goal": {"enum": ["explain", "analyze", "compare", "act", "review"]},
+    "facts": {"$ref": "#/$defs/statements"},
+    "constraints": {"$ref": "#/$defs/statements"},
+    "assumptions": {"$ref": "#/$defs/statements"},
+    "query_expansions": {
+      "type": "array", "maxItems": 3, "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1, "maxLength": 1000}
+    },
+    "filters": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "book": {"type": "string", "minLength": 1},
+        "author": {"type": "string", "minLength": 1}
+      }
+    }
+  },
+  "$defs": {
+    "statements": {
+      "type": "array", "maxItems": 30,
+      "items": {"type": "string", "minLength": 1, "maxLength": 1000}
+    }
+  }
+}
+

@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "第二大脑分析草稿 v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "session_id", "library_version", "decisions", "cross_validation", "verdict", "actions"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "session_id": {"type": "string", "pattern": "^call\\.[a-f0-9]{24}$"},
+    "library_version": {"type": "string", "pattern": "^[a-f0-9]{24}$"},
+    "decisions": {
+      "type": "array", "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["card_id", "decision", "reason_code", "reason"],
+        "properties": {
+          "card_id": {"type": "string", "minLength": 1},
+          "decision": {"enum": ["admit", "reject"]},
+          "reason_code": {"enum": ["relevant", "irrelevant", "condition_mismatch", "boundary_hit", "duplicate", "weak_evidence", "source_ambiguous", "lower_explanatory_value", "outside_user_goal"]},
+          "reason": {"type": "string", "minLength": 1},
+          "roles": {"type": "array", "uniqueItems": true, "items": {"enum": ["support", "challenge", "boundary", "alternative", "evidence_auditor", "action_translator"]}},
+          "principle": {"type": "string"},
+          "principle_gap": {"type": "boolean"},
+          "situation_mapping": {"type": "string"},
+          "judgment_effect": {"type": "string"},
+          "quote": {
+            "type": "object", "additionalProperties": false,
+            "required": ["evidence_id", "text"],
+            "properties": {"evidence_id": {"type": "string"}, "text": {"type": "string", "minLength": 1}}
+          }
+        }
+      }
+    },
+    "cross_validation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["agreements", "conflicts", "limitations", "alternatives", "evidence_gaps"],
+      "properties": {
+        "agreements": {"$ref": "#/$defs/findings"},
+        "conflicts": {"$ref": "#/$defs/findings"},
+        "limitations": {"$ref": "#/$defs/findings"},
+        "alternatives": {"$ref": "#/$defs/findings"},
+        "evidence_gaps": {"type": "array", "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "verdict": {
+      "type": "object", "additionalProperties": false,
+      "required": ["conclusion", "basis_card_ids", "decisive_user_facts", "uncertainties"],
+      "properties": {
+        "conclusion": {"type": "string", "minLength": 1},
+        "basis_card_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string"}},
+        "decisive_user_facts": {"type": "array", "items": {"type": "string"}},
+        "uncertainties": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "actions": {
+      "type": "array", "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["step", "basis_card_ids", "completion_criteria", "validation_signal", "stop_condition"],
+        "properties": {
+          "step": {"type": "string", "minLength": 1},
+          "basis_card_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string"}},
+          "completion_criteria": {"type": "string", "minLength": 1},
+          "validation_signal": {"type": "string", "minLength": 1},
+          "stop_condition": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "findings": {
+      "type": "array", "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["summary", "card_ids"],
+        "properties": {
+          "summary": {"type": "string", "minLength": 1},
+          "card_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string"}
+        }
+      }
+    }
+  }
+}
+}

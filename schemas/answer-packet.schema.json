@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "第二大脑正式答案包 v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "session_id", "library_version", "mode", "problem", "call_ledger", "witness_cards", "cross_validation", "verdict", "actions", "sources"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "session_id": {"type": "string", "pattern": "^call\\.[a-f0-9]{24}$"},
+    "library_version": {"type": "string", "pattern": "^[a-f0-9]{24}$"},
+    "mode": {"enum": ["quick", "standard", "deep"]},
+    "problem": {"type": "object"},
+    "call_ledger": {"type": "object"},
+    "witness_cards": {"type": "array", "items": {"type": "object"}},
+    "cross_validation": {"type": "object"},
+    "verdict": {"type": "object"},
+    "actions": {"type": "array", "items": {"type": "object"}},
+    "sources": {"type": "array", "items": {"type": "object"}}
+  }
+}

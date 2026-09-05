@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "default_mode": "standard",
+  "modes": {
+    "quick": {"recall_limit": 12, "final_limit": 3, "relation_hops": 1},
+    "standard": {"recall_limit": 30, "final_limit": 6, "relation_hops": 1},
+    "deep": {"recall_limit": 50, "final_limit": 10, "relation_hops": 1}
+  },
+  "prefer_cross_book": true,
+  "show_rejected_candidates": true,
+  "deep_goal_types": ["compare", "review"],
+  "quote_max_chars": 240,
+  "evidence_context_chars": 600
+}
+

@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "第二大脑检索会话 v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "session_id", "library_version", "mode", "status", "request", "retrieval", "candidates"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "session_id": {"type": "string", "pattern": "^call\\.[a-f0-9]{24}$"},
+    "library_version": {"type": "string", "pattern": "^[a-f0-9]{24}$"},
+    "mode": {"enum": ["quick", "standard", "deep"]},
+    "status": {"enum": ["ready", "no_relevant_knowledge"]},
+    "request": {"type": "object"},
+    "retrieval": {
+      "type": "object", "additionalProperties": false,
+      "required": ["mode", "queries", "books_searched", "filters", "degraded", "degraded_reason"],
+      "properties": {
+        "mode": {"enum": ["keyword", "semantic", "hybrid"]},
+        "queries": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "books_searched": {"type": "array", "items": {"type": "string"}},
+        "filters": {"type": "object"},
+        "degraded": {"type": "boolean"},
+        "degraded_reason": {"type": ["string", "null"]}
+      }
+    },
+    "candidates": {
+      "type": "array", "maxItems": 50,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["card_id", "status", "card", "book", "match", "evidence", "relations"],
+        "properties": {
+          "card_id": {"type": "string", "minLength": 1},
+          "status": {"const": "pending"},
+          "card": {"type": "object"},
+          "book": {"type": "object"},
+          "match": {"type": "object"},
+          "evidence": {"type": "array", "minItems": 1, "items": {"type": "object"}},
+          "relations": {"type": "array", "items": {"type": "object"}}
+        }
+      }
+    }
+  }
+}
