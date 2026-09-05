@@ -126,7 +126,7 @@ class SearchEngine:
         """检索 query；mode 选 keyword/semantic/hybrid，过滤器按书籍或作者 ID/名称，expansions 为补充问法。"""
         if not isinstance(query, str) or not query.strip() or len(query) > 4000:
             raise ValueError('INVALID_ARGUMENT: 问题为空或过长')
-        if mode not in ('keyword', 'semantic', 'hybrid') or type(limit) is not int or not 1 <= limit <= 30:
+        if mode not in ('keyword', 'semantic', 'hybrid') or type(limit) is not int or not 1 <= limit <= 50:
             raise ValueError('INVALID_ARGUMENT: 检索模式或条数无效')
         if not 0 <= min_similarity <= 1 or len(expansions or []) > 5:
             raise ValueError('INVALID_ARGUMENT: 阈值或扩展问法无效')
@@ -144,11 +144,11 @@ class SearchEngine:
             if mode in ('keyword', 'hybrid'):
                 scores = self.keyword_scores(text)
                 for key, score in scores.items(): keyword[key] = max(keyword.get(key, 0), score)
-                rankings.append([key for key in sorted(eligible, key=lambda k: (-scores[k], k)) if scores[key] > 0][:30])
+                rankings.append([key for key in sorted(eligible, key=lambda k: (-scores[k], k)) if scores[key] > 0][:50])
             if mode in ('semantic', 'hybrid'):
                 scores = self.semantic_scores(text)
                 for key, score in scores.items(): semantic[key] = max(semantic.get(key, -1), score)
-                rankings.append([key for key in sorted(eligible, key=lambda k: (-scores[k], k)) if scores[key] >= min_similarity][:30])
+                rankings.append([key for key in sorted(eligible, key=lambda k: (-scores[k], k)) if scores[key] >= min_similarity][:50])
         results = []
         fused = fuse_rankings(rankings)
         if mode == 'hybrid':

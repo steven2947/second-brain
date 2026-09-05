@@ -7,7 +7,7 @@ from src.orchestration.policy import MODES, validate_policy
 from src.retrieval.search import SearchEngine
 
 
-def _stable_id(document):
+def session_id_for(document):
     """以规范 JSON 生成可复现的会话 ID。"""
     encoded = json.dumps(document, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return "call." + hashlib.sha256(encoded).hexdigest()[:24]
@@ -90,6 +90,6 @@ def create_call_session(library, request, mode, policy, retrieval_mode="hybrid",
         },
         "candidates": candidates,
     }
-    session = {"session_id": _stable_id(body), **body}
+    session = {"session_id": session_id_for(body), **body}
     validate_document("call-session.schema.json", session)
     return session
