@@ -8,6 +8,7 @@ configs/local.json
 .pytest_cache/
 __pycache__/
 *.py[cod]
+:memory:.ses
 .DS_Store
 
 # 外部依赖由 vendor/cangjie.lock.json 锁定
