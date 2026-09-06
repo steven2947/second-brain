@@ -54,6 +54,18 @@ python -m src.interfaces.cli --library <用户版本库> package --project . --d
 
 publish 切换完整快照，当前不自动合并多个单书。第二本先发布到单独试验库；多书合并、跨作者图谱和专家团回答要另验收后再进入主库。升级程序继续使用外部数据目录，不自动重装种子。
 
+## 6. 导入已有 v1.2 Markdown 蒸馏成果
+
+已按本地流水线产生 `book.yaml`、四类卡片和关系文件时，不需要重新蒸馏原书。适配器会保留本地卡片 ID，重新核对原文 SHA-256 与 `char_span`，并只把卡片用到的离散短引写入候选库。
+
+```bash
+python -m src.interfaces.cli import-local \
+  --book-dir <05_蒸馏成果/books/分类/BOOK-XXXX> \
+  --destination <全新候选目录>
+```
+
+默认只接受有效人工验收后标为 `accepted` 的书。为了在验收前试跑检索效果，可显式加 `--allow-ready`；这种输出会标记为 `evaluation_candidate`，不应切换正式 `CURRENT`。多本书可重复传入 `--book-dir`，但批量候选仍需检索和语义抽样。
+
 ## 从单书扩到批量
 
-复用相同命令和提示词，每本分开 source/scope/job/output/candidate。下一步可增加队列调度、预算上限、重试与跨书合并，不能用 shell 循环伪装模型已自动蒸馏。本轮已跑通单书并记录可复用产物，未进行 168 本批量处理。
+新书蒸馏复用相同命令和提示词，每本分开 source/scope/job/output/candidate。已蒸馏的本地 v1.2 卡片走上述适配器，不重做模型提取。队列调度、预算上限和失败重试仍由本地蒸馏流水线管理；Second Brain 只接收通过门禁的派生知识。

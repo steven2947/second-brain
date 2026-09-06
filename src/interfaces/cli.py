@@ -67,6 +67,7 @@ def main(argv=None):
     complete = commands.add_parser('complete');complete.add_argument('--job',required=True);complete.add_argument('--output',action='append',required=True);complete.add_argument('--candidate',required=True)
     bundle = commands.add_parser('bundle');bundle.add_argument('--review',action='append',required=True);bundle.add_argument('--destination',required=True)
     author_skill = commands.add_parser('author-skill');author_skill.add_argument('--compiled',required=True);author_skill.add_argument('--destination',required=True)
+    local_import = commands.add_parser('import-local');local_import.add_argument('--book-dir',action='append',required=True);local_import.add_argument('--destination',required=True);local_import.add_argument('--allow-ready',action='store_true')
     package = commands.add_parser('package');package.add_argument('--project',default='.');package.add_argument('--destination',required=True);package.add_argument('--author-skill')
     analyze = commands.add_parser('analyze');analyze.add_argument('--request',required=True);analyze.add_argument('--mode',choices=['quick','standard','deep'])
     analyze.add_argument('--retrieval-mode',choices=['keyword','semantic','hybrid'],default='hybrid');analyze.add_argument('--policy');analyze.add_argument('--output',required=True);analyze.add_argument('--replace',action='store_true')
@@ -86,6 +87,9 @@ def main(argv=None):
         elif args.command == 'author-skill':
             from src.distillation.cangjie_adapter import build_author_skill
             result = build_author_skill(args.library,args.compiled,args.destination)
+        elif args.command == 'import-local':
+            from src.distillation.local_markdown_adapter import import_local_books
+            result = import_local_books(args.book_dir,args.destination,args.allow_ready)
         elif args.command == 'package':
             from src.interfaces.delivery import build_release
             result = build_release(args.project,args.destination,args.library,args.author_skill)
