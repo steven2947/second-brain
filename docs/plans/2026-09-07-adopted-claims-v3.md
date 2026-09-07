@@ -67,7 +67,9 @@ Files: 仅新增忽略提交的`data/jobs/adopted-claims-v3/`运行、证据与�
 
 ## Task D：收尾提交与PR
 
-- [ ] 跑全部pytest、`git diff --check`，独立审阅代码和同题效果。
-- [ ] 查看暂存白名单和相对远端main的完整差异；确认无本机路径、凭据、私有原文/卡片/运行记录进入提交。保留已有用户改动，不全盘git add。
-- [ ] 分清本地commit/远端push/PR状态。用户已选择推送并提PR，完成后不合并main，不清理当前工作树。
-- [ ] 记录用时、工具可得token统计及不可得边界。Goal只有修复、验证、提交推送及PR均完成才标记complete；外部权限不足则如实报告，不冒充成功。
+- [x] 跑全部pytest、`git diff --check`，独立审阅代码和同题效果。
+- [x] 查看暂存白名单和相对远端main的完整差异；确认无本机路径、凭据、私有原文/卡片/运行记录进入提交。保留已有用户改动，不全盘git add。
+- [x] 分清本地commit/远端push/PR状态。用户已选择推送并提PR，完成后不合并main，不清理当前工作树。
+- [x] 记录用时、工具可得token统计及不可得边界。Goal只有修复、验证、提交推送及PR均完成才标记complete；外部权限不足则如实报告，不冒充成功。
+
+发布回执：代码提交`be9ee44`已推送至`codex/auditable-call-layer`，[PR #1](https://github.com/steven2947/second-brain/pull/1)为OPEN，base为main；核验时main仍为`e2e3c87`，未合并。用时与统计口径见验收说明；本记录随后以纯文档提交补齐，不改变已测代码。
