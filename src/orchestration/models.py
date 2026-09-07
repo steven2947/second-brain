@@ -7,10 +7,16 @@ from jsonschema import Draft202012Validator
 
 SCHEMA_ROOT = Path(__file__).resolve().parents[2] / "schemas"
 ERROR_PREFIXES = {
+    "intake-event.schema.json": "INVALID_INTAKE_EVENT",
+    "problem-state.schema.json": "INVALID_PROBLEM_STATE",
     "call-request.schema.json": "INVALID_CALL_REQUEST",
     "call-session.schema.json": "INVALID_CALL_SESSION",
     "analysis-draft.schema.json": "INVALID_ANALYSIS_DRAFT",
     "answer-packet.schema.json": "INVALID_ANSWER_PACKET",
+    "analysis-draft.v2.schema.json": "INVALID_ANALYSIS_DRAFT",
+    "answer-packet.v2.schema.json": "INVALID_ANSWER_PACKET",
+    "analysis-draft.v3.schema.json": "INVALID_ANALYSIS_DRAFT",
+    "answer-packet.v3.schema.json": "INVALID_ANSWER_PACKET",
 }
 
 
@@ -26,4 +32,3 @@ def validate_document(schema_name, document):
         location = ".".join(str(part) for part in error.absolute_path) or "$"
         raise ValueError(f"{ERROR_PREFIXES[schema_name]}: {location}: {error.message}")
     return document
-

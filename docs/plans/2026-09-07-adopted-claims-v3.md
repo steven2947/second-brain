@@ -25,9 +25,9 @@
 
 Files: 新建`schemas/analysis-draft.v3.schema.json`、`schemas/answer-packet.v3.schema.json`、`src/orchestration/adoption.py`、`tests/test_adopted_claims.py`；局部修改`src/orchestration/models.py`、`src/orchestration/validation.py`、`tools/dev/materialize_effect_draft.py`。
 
-- [ ] 先保存工作区、93项来源输入及三题旧稿的指纹，跑当前基线测试。
-- [ ] 先写失败测试：空白采用主张、空/重复/外卡证据、引用未选证据、推论冒充作者、无采用字段旧稿冒充v3、公开整卡文字、共享证据错误关联均拒绝或不输出。
-- [ ] 在每个v3采用决定中要求`adoption`，拒绝决定不需要该字段。格式如下（内容是自编示例，不是作者引文）：
+- [x] 先保存工作区、93项来源输入及三题旧稿的指纹，跑当前基线测试。
+- [x] 先写失败测试：空白采用主张、空/重复/外卡证据、引用未选证据、推论冒充作者、无采用字段旧稿冒充v3、公开整卡文字、共享证据错误关联均拒绝或不输出。
+- [x] 在每个v3采用决定中要求`adoption`，拒绝决定不需要该字段。格式如下（内容是自编示例，不是作者引文）：
 
 ```json
 {
@@ -38,11 +38,11 @@ Files: 新建`schemas/analysis-draft.v3.schema.json`、`schemas/answer-packet.v3
 }
 ```
 
-- [ ] 字符串非空白；证据至少一个且唯一，必须属于该候选，引用也只能来自选定证据。`source_claim_type`允许现有六类：author_claim/author_anecdote/quoted_other/system_inference/editorial_summary/unclassified（以知识卡Schema实际枚举核对）；不能将非作者归属自动升级为作者。转换为系统推论可保守降级，改变成其他归属需先修源卡，不在调用时洗白。
-- [ ] v3见证卡公开字段为`adopted_claim`、`source_claim_type`、选定`evidence_ids`、`excluded_scope`及原v2中Agent填写的原理/机制/映射/判断；无整卡`claim/reasoning/conditions/boundaries`自动拷贝。`original_card_ref`由程序生成，包含session_id/library_version/card_id以便回到完整会话。
-- [ ] 见证卡章节和答案`sources`仅由选定证据装配，共享证据的card_ids仅关联真正选择它的卡；不删除调用会话的原证据。
-- [ ] v3答案见证结构严格校验，禁止把原卡字段塞回见证卡。v2各规则完整继承；旧v1/v2输出须与基线一致。
-- [ ] `materialize(session, spec, schema_version=2)`保持旧默认；新增显式3及CLI `--schema-version 3`，不为缺失采用判断补默认值。
+- [x] 字符串非空白；证据至少一个且唯一，必须属于该候选，引用也只能来自选定证据。已核对知识卡Schema实际只有author_claim/quoted_other/system_inference三类，缺省归属为unclassified；v3采用归属仅允许这三类加unclassified。不能将非作者归属自动升级为作者。转换为系统推论可保守降级，改变成其他归属需先修源卡，不在调用时洗白。
+- [x] v3见证卡公开字段为`adopted_claim`、`source_claim_type`、选定`evidence_ids`、`excluded_scope`及原v2中Agent填写的原理/机制/映射/判断；无整卡`claim/reasoning/conditions/boundaries`自动拷贝。`original_card_ref`由程序生成，包含session_id/library_version/card_id以便回到完整会话。
+- [x] 见证卡章节和答案`sources`仅由选定证据装配，共享证据的card_ids仅关联真正选择它的卡；不删除调用会话的原证据。
+- [x] v3答案见证结构严格校验，禁止把原卡字段塞回见证卡。v2各规则完整继承；旧v1/v2输出须与基线一致。
+- [x] `materialize(session, spec, schema_version=2)`保持旧默认；新增显式3及CLI `--schema-version 3`，不为缺失采用判断补默认值。
 
 验证命令：`.venv-mvp/bin/python -m pytest tests/test_adopted_claims.py tests/test_orchestration_validation.py tests/test_effect_answer_audit.py -q`。先见真实红测，再绿测，记录结果；主Agent与独立Agent分别作规格及质量复核。
 
@@ -50,20 +50,20 @@ Files: 新建`schemas/analysis-draft.v3.schema.json`、`schemas/answer-packet.v3
 
 Files: 新建`prompts/answer-orchestrator.v3.md`、`docs/adopted-claims-v3.md`、`tests/test_adoption_skill_contract.py`；局部修改`skills/second-brain/SKILL.md`及两份references、`README.md`、`docs/architecture.md`。旧v2提示词和测试保留。
 
-- [ ] Skill默认v3，读当前提示词和新schema；旧v2标明历史兼容，不能把旧包当已完成局部采用隔离。
-- [ ] 新prompt完整保留v2的15项表达能力，增加adoption与下游只读采用内容的职责说明；系统综合仍允许自由生成并明确归属。
-- [ ] 文档列原卡→采用主张→原理/映射→裁决的字段边界，强调原文ID匹配不证明语义正确、作者有值不等于完整、原卡审计引用不构成采用授权。
-- [ ] 新契约测试断言新版入口、字段和已认可表达要求共存；不依靠字数评分。
+- [x] Skill默认v3，读当前提示词和新schema；旧v2标明历史兼容，不能把旧包当已完成局部采用隔离。
+- [x] 新prompt完整保留v2的15项表达能力，增加adoption与下游只读采用内容的职责说明；系统综合仍允许自由生成并明确归属。
+- [x] 文档列原卡→采用主张→原理/映射→裁决的字段边界，强调原文ID匹配不证明语义正确、作者有值不等于完整、原卡审计引用不构成采用授权。
+- [x] 新契约测试断言新版入口、字段和已认可表达要求共存；不依靠字数评分。
 
 ## Task C：同题、同会话前后对照
 
 Files: 仅新增忽略提交的`data/jobs/adopted-claims-v3/`运行、证据与阅读稿；新建可提交的脱敏验收说明`docs/adopted-claims-verification.md`。
 
-- [ ] 冻结之前三题的问题档案、session、draft、packet、阅读稿和来源审计锁，不重新抽题或偷偷选新候选。
-- [ ] 当前Agent逐卡读取15张已采用卡原始证据与原理，显式写出adoption；不把旧原理自动复制成作者主张。
-- [ ] 用同一session和新草稿运行正式验证器；旧裁决、行动、知识组、圆桌、学习收获和末尾指令作结构相等检查。若语义纠错需要变化，必须单列，不称完全不变。
-- [ ] 新稿只改必要来源范围说明与账本；逐段对照旧稿，主建议与详解尽量字节相同，不以复制本身证明新生成稳定性。
-- [ ] 原始输入指纹均不变，负面测试证据未进入新版sources。列出保留、不采用及原理/建议是否改变；机械通过与用户效果验收分开。
+- [x] 冻结之前三题的问题档案、session、draft、packet、阅读稿和来源审计锁，不重新抽题或偷偷选新候选。
+- [x] 当前Agent逐卡读取15张已采用卡原始证据与原理，显式写出adoption；不把旧原理自动复制成作者主张。
+- [x] 用同一session和新草稿运行正式验证器；旧裁决、行动、知识组、圆桌、学习收获和末尾指令作结构相等检查。若语义纠错需要变化，必须单列，不称完全不变。
+- [x] 新稿只改必要来源范围说明与账本；逐段对照旧稿，主建议与详解尽量字节相同，不以复制本身证明新生成稳定性。
+- [x] 原始输入指纹均不变，负面测试证据未进入新版sources。列出保留、不采用及原理/建议是否改变；机械通过与用户效果验收分开。
 
 ## Task D：收尾提交与PR
 

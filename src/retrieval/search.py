@@ -128,7 +128,7 @@ class SearchEngine:
             raise ValueError('INVALID_ARGUMENT: 问题为空或过长')
         if mode not in ('keyword', 'semantic', 'hybrid') or type(limit) is not int or not 1 <= limit <= 50:
             raise ValueError('INVALID_ARGUMENT: 检索模式或条数无效')
-        if not 0 <= min_similarity <= 1 or len(expansions or []) > 5:
+        if not 0 <= min_similarity <= 1 or len(expansions or []) > 6:
             raise ValueError('INVALID_ARGUMENT: 阈值或扩展问法无效')
         books = {b['id']: b for b in self.library.manifest['books']}
         eligible = {key for key in self.ids if

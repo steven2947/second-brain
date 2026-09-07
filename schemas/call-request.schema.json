@@ -12,8 +12,22 @@
     "constraints": {"$ref": "#/$defs/statements"},
     "assumptions": {"$ref": "#/$defs/statements"},
     "query_expansions": {
-      "type": "array", "maxItems": 3, "uniqueItems": true,
-      "items": {"type": "string", "minLength": 1, "maxLength": 1000}
+      "type": "array", "maxItems": 6, "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1, "maxLength": 4000}
+    },
+    "context": {
+      "type": "object", "additionalProperties": false,
+      "required": ["problem_id", "revision", "state_hash", "desired_outcome", "unknowns", "clarification_rounds", "stop_reason", "previous_session_id"],
+      "properties": {
+        "problem_id": {"type": "string", "pattern": "^problem\\.[a-f0-9]{32}$"},
+        "revision": {"type": "integer", "minimum": 1},
+        "state_hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "desired_outcome": {"type": "string", "maxLength": 1000},
+        "unknowns": {"$ref": "#/$defs/statements"},
+        "clarification_rounds": {"type": "integer", "minimum": 0, "maximum": 3},
+        "stop_reason": {"enum": ["sufficient", "round_limit", "analyze_now", "unknown"]},
+        "previous_session_id": {"type": ["string", "null"], "pattern": "^call\\.[a-f0-9]{24}$"}
+      }
     },
     "filters": {
       "type": "object", "additionalProperties": false,
@@ -30,4 +44,3 @@
     }
   }
 }
-

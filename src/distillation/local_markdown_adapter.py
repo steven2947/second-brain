@@ -1,5 +1,6 @@
 """把本地 v1.2 Markdown/YAML 蒸馏成果编译为 Second Brain 候选库。"""
 import hashlib
+import json
 import os
 import re
 import shutil
@@ -47,6 +48,25 @@ def _strings(value):
         return []
     values = value if isinstance(value, list) else [value]
     return [str(item).strip() for item in values if str(item).strip()]
+
+
+def _local_sources(card):
+    """card 为本地卡元数据；兼容 v1.2 数组证据与早期单 `source` 证据。"""
+    sources = list(card.get("primary_sources") or []) + list(card.get("supporting_sources") or [])
+    inline = card.get("source")
+    if isinstance(inline, dict) and all(key in inline for key in ("anchor_quote", "char_span", "source_hash")):
+        sources.append(inline)
+    unique = []
+    seen = set()
+    for source in sources:
+        if not isinstance(source, dict):
+            continue
+        span = source.get("char_span")
+        key = (tuple(span) if isinstance(span, list) else None, source.get("anchor_quote"), source.get("source_hash"))
+        if key not in seen:
+            seen.add(key)
+            unique.append(source)
+    return unique
 
 
 def _author_id(author):
@@ -99,11 +119,11 @@ def import_local_books(book_dirs, destination, allow_ready=False):
                     continue
                 card_id = card.get("id")
                 if (not isinstance(card_id, str) or
-                        not re.fullmatch(r"(?:K|M|CASE|CX|Q)-" + re.escape(book_id) + r"-[A-Z0-9-]+", card_id)):
+                        not re.fullmatch(r"(?:K|M|CASE|CX|Q)-" + re.escape(book_id) + r"-[A-Za-z0-9-]+", card_id)):
                     raise ValueError(f"INVALID_LOCAL_CARD: 卡片 ID 不安全或书籍归属不一致: {path}")
                 if card.get("source", {}).get("book_id", book_id) != book_id:
                     raise ValueError(f"INVALID_LOCAL_CARD: 书籍归属不一致: {path}")
-                local_sources = list(card.get("primary_sources") or []) + list(card.get("supporting_sources") or [])
+                local_sources = _local_sources(card)
                 if not local_sources:
                     raise ValueError(f"INVALID_LOCAL_CARD: 缺少证据: {path}")
                 source_keys = []
@@ -192,7 +212,7 @@ def import_local_books(book_dirs, destination, allow_ready=False):
         relation_path = book_dir / "06_关系" / "relations.json"
         if not relation_path.is_file():
             continue
-        relation_payload = __import__("json").loads(relation_path.read_text(encoding="utf-8"))
+        relation_payload = json.loads(relation_path.read_text(encoding="utf-8"))
         for local in relation_payload.get("edges", []):
             source_id, target_id = local.get("source"), local.get("target")
             if source_id not in card_ids or target_id not in card_ids:
@@ -204,6 +224,9 @@ def import_local_books(book_dirs, destination, allow_ready=False):
             if edge_key in seen_edge_keys:
                 continue
             seen_edge_keys.add(edge_key)
+            edge_digest = hashlib.sha256(
+                json.dumps(edge_key, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+            ).hexdigest()[:12]
             linked = [
                 evidence_ids[(book_id, source_id_keys[book_id][source_ref])]
                 for source_ref in local.get("evidence_ids", [])
@@ -214,7 +237,7 @@ def import_local_books(book_dirs, destination, allow_ready=False):
                 linked = card_evidence[(book_id, source_id)][:1]
                 basis = "inference"
             output_edges.append({
-                "id": f"relation.{book_id}.{local.get('id') or len(output_edges)}",
+                "id": f"relation.{book_id}.{local.get('id') or 'anonymous'}.{edge_digest}",
                 "from": source_id,
                 "to": target_id,
                 "type": RELATION_TYPES.get(str(local.get("relation") or "").upper(), "composes_with"),

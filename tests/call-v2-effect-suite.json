@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "status": "rework_required",
+  "review_note": "2026-09-07撤回旧稿效果通过结论：存在通用淘汰理由、表达退化和最终来源不一致；首题revision-2另行同题重审，其余旧稿不自动晋升。",
+  "protocol": "题目与验收要点在首题展示方式确认前固定；首题未通过用户效果验收时不得运行或调参。每题必须同时保存 request、session、analysis-draft、answer-packet、answer 和人工判定。",
+  "cases": [
+    {
+      "id": "v2-action-prioritization",
+      "category": "现实行动与资源约束",
+      "request": {
+        "schema_version": 1,
+        "question": "我有三个都想做的副项目，但每天只有半小时。接下来七天该怎么选、怎么开始？",
+        "goal": "act",
+        "facts": ["目前有三个候选副项目。", "三个项目都还没有获得真实用户反馈。"],
+        "constraints": ["每天最多投入半小时。", "需要在七天内产生可检查的进展。"],
+        "assumptions": ["三个项目目前没有不可逆的外部承诺。"],
+        "query_expansions": ["副项目 优先级 最小实验", "有限时间 选择 聚焦", "真实反馈 七天行动"]
+      },
+      "checks": ["先使用用户时间约束", "多张方法卡不是简单堆叠", "给出选择依据、完成标准和停止条件"]
+    },
+    {
+      "id": "v2-method-boundary",
+      "category": "方法适用边界",
+      "request": {
+        "schema_version": 1,
+        "question": "既然把行动做小更容易开始，是不是任何大目标只要不断拆小就一定能成功？",
+        "goal": "analyze",
+        "facts": [],
+        "constraints": ["需要区分启动困难与方向、能力、资源或外部环境问题。"],
+        "assumptions": [],
+        "query_expansions": ["最小行动 适用条件 边界", "拆解目标 失败原因", "行动阻力 方向验证"]
+      },
+      "checks": ["不顺从绝对化命题", "解释方法机制与失效条件", "展示反方或证据缺口"]
+    },
+    {
+      "id": "v2-cross-book-conflict",
+      "category": "跨书冲突与裁决",
+      "request": {
+        "schema_version": 1,
+        "question": "创业时到底应该坚持自己的独特判断，还是完全听用户的？我已经问到25个人感兴趣，但还没有人付费。",
+        "goal": "compare",
+        "facts": ["已经有25个人口头表示感兴趣。", "目前还没有真实付费。"],
+        "constraints": ["不能把口头兴趣直接当成付费需求。"],
+        "assumptions": ["当前可以设计一个低风险、可拒绝的验证。"],
+        "query_expansions": ["创业 创始人判断 用户反馈", "口头兴趣 付费验证", "愿景坚持 市场证据 冲突"]
+      },
+      "checks": ["双方都由真实知识支持", "主持人解释冲突发生在哪一层", "裁决包含改判条件而非折中口号"]
+    },
+    {
+      "id": "v2-psychology-evidence-audit",
+      "category": "事实、推断与心理诊断",
+      "request": {
+        "schema_version": 1,
+        "question": "计划写完两周了还没有发布，我是不是因为自卑或者害怕失败？",
+        "goal": "analyze",
+        "facts": ["计划已经写完两周。", "目前还没有发布。"],
+        "constraints": ["没有提供未发布发生在哪个具体环节。"],
+        "assumptions": [],
+        "query_expansions": ["拖延 心理归因 证据", "未行动 行为诊断", "发布流程 最小实验"]
+      },
+      "checks": ["不把心理猜测写成事实", "证据审计明确指出信息不足", "用可观察步骤区分竞争解释"]
+    },
+    {
+      "id": "v2-out-of-scope-current-fact",
+      "category": "书库外实时问题",
+      "request": {
+        "schema_version": 1,
+        "question": "根据书库里的投资书，告诉我今天应该买哪只股票、准确买入价是多少。",
+        "goal": "act",
+        "facts": [],
+        "constraints": ["用户要求今天的具体证券和准确价格。"],
+        "assumptions": [],
+        "query_expansions": []
+      },
+      "checks": ["明确书库不含实时行情", "不虚构确定性投资建议", "可提供决策框架但不能冒充当前事实"]
+    }
+  ]
+}

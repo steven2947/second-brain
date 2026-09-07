@@ -5,6 +5,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from src.interfaces.cli import main
 
@@ -125,6 +126,28 @@ class OrchestrationCliTests(unittest.TestCase):
         self.assertEqual(result["schema_version"], 1)
         self.assertIn("library_version", result)
         self.assertEqual(result["result"][0]["id"], "book.demo")
+
+    def test_analyze_passes_explicit_index_and_model_cache_paths(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            request_path, output = root / "request.json", root / "session.json"
+            index_root = root / "shared-indexes"
+            request_path.write_text(json.dumps(request_document()), encoding="utf-8")
+            session = {
+                "session_id": "call.cache-test",
+                "status": "ready_for_analysis",
+                "candidates": [],
+            }
+            with patch("src.orchestration.session.create_call_session", return_value=session) as create:
+                status, _, stderr = run_cli([
+                    "--library", str(LIBRARY), "--index-root", str(index_root),
+                    "analyze", "--request", str(request_path), "--retrieval-mode", "hybrid",
+                    "--output", str(output),
+                ])
+
+            self.assertEqual((status, stderr), (0, ""))
+            self.assertEqual(create.call_args.kwargs["index_root"], index_root)
+            self.assertEqual(create.call_args.kwargs["model_cache"], index_root / "model-cache")
 
 
 if __name__ == "__main__":

@@ -86,6 +86,23 @@ class LocalMarkdownAdapterTests(unittest.TestCase):
         evidence_id = library.get_knowledge("K-BOOK-9001-C01-A")["evidence_ids"][0]
         self.assertEqual(library.get_evidence(evidence_id)["origin"]["start"], self.source_text.index("先看清"))
 
+    def test_inline_source_evidence_is_verified_without_weakening_anchor_gate(self):
+        path = self.book_dir / "01_知识卡" / "K-BOOK-9001-C01-A.md"
+        metadata = yaml.safe_load(path.read_text(encoding="utf-8").split("---\n", 2)[1])
+        evidence = metadata.pop("primary_sources")[0]
+        metadata["source"].update(evidence)
+        path.write_text(
+            "---\n" + yaml.safe_dump(metadata, allow_unicode=True, sort_keys=False) + "---\n# 先看事实\n",
+            encoding="utf-8",
+        )
+
+        result = import_local_books([self.book_dir], self.root / "candidate", allow_ready=True)
+        self.assertEqual(result["cards"], 2)
+
+        path.write_text(path.read_text(encoding="utf-8").replace("先看清事实", "不存在的原文"), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "锚点"):
+            import_local_books([self.book_dir], self.root / "broken", allow_ready=True)
+
     def test_ready_book_requires_explicit_candidate_override(self):
         with self.assertRaisesRegex(ValueError, "未人工验收"):
             import_local_books([self.book_dir], self.root / "candidate")
@@ -104,6 +121,21 @@ class LocalMarkdownAdapterTests(unittest.TestCase):
 
         with self.assertRaisesRegex(ValueError, "卡片 ID"):
             import_local_books([self.book_dir], self.root / "candidate", allow_ready=True)
+
+    def test_safe_lowercase_unit_suffix_is_preserved(self):
+        path = next((self.book_dir / "01_知识卡").glob("*.md"))
+        path.write_text(path.read_text(encoding="utf-8").replace(
+            "K-BOOK-9001-C01-A", "K-BOOK-9001-CH02s1-A"
+        ), encoding="utf-8")
+        relation_path = self.book_dir / "06_关系" / "relations.json"
+        relation_path.write_text(relation_path.read_text(encoding="utf-8").replace(
+            "K-BOOK-9001-C01-A", "K-BOOK-9001-CH02s1-A"
+        ), encoding="utf-8")
+
+        result = import_local_books([self.book_dir], self.root / "candidate", allow_ready=True)
+        self.assertEqual(result["cards"], 2)
+        self.assertEqual(Library(self.root / "candidate").get_knowledge("K-BOOK-9001-CH02s1-A")["id"],
+                         "K-BOOK-9001-CH02s1-A")
 
     def test_cli_builds_evaluation_candidate_without_publishing(self):
         destination = self.root / "candidate"
@@ -140,6 +172,23 @@ class LocalMarkdownAdapterTests(unittest.TestCase):
         result = import_local_books([self.book_dir], self.root / "candidate", allow_ready=True)
 
         self.assertEqual(result["relations"], 1)
+
+    def test_reused_local_relation_id_gets_content_addressed_namespace(self):
+        path = self.book_dir / "06_关系" / "relations.json"
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        second = dict(payload["edges"][0])
+        second["explanation"] = "同一本书的旧数据重用了 ID，但这是另一条论据。"
+        payload["edges"].append(second)
+        path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+
+        destination = self.root / "candidate"
+        result = import_local_books([self.book_dir], destination, allow_ready=True)
+
+        self.assertEqual(result["relations"], 2)
+        relation_ids = [item["id"] for item in json.loads(
+            (destination / "relations.json").read_text(encoding="utf-8")
+        )["edges"]]
+        self.assertEqual(len(relation_ids), len(set(relation_ids)))
 
 
 if __name__ == "__main__":

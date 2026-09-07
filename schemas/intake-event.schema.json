@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "自适应澄清事件 v1",
+  "oneOf": [
+    {
+      "type": "object", "additionalProperties": false,
+      "required": ["type", "question", "reason"],
+      "properties": {
+        "type": {"const": "ask"},
+        "question": {"$ref": "#/$defs/text"},
+        "reason": {"$ref": "#/$defs/text"}
+      }
+    },
+    {
+      "type": "object", "additionalProperties": false,
+      "required": ["type", "source_message", "intent", "changes", "reason"],
+      "properties": {
+        "type": {"const": "user_update"},
+        "source_message": {"type": "string", "minLength": 1, "maxLength": 20000},
+        "intent": {"enum": ["answer", "supplement", "analyze_now", "unknown"]},
+        "reason": {"$ref": "#/$defs/text"},
+        "changes": {
+          "type": "object", "additionalProperties": false,
+          "properties": {
+            "desired_outcome": {"type": "string", "maxLength": 1000},
+            "facts": {"$ref": "#/$defs/statements"},
+            "constraints": {"$ref": "#/$defs/statements"},
+            "assumptions": {"$ref": "#/$defs/statements"},
+            "unknowns": {"$ref": "#/$defs/statements"}
+          }
+        }
+      }
+    },
+    {
+      "type": "object", "additionalProperties": false,
+      "required": ["type", "retrieval_focus", "query_expansions", "reason"],
+      "properties": {
+        "type": {"const": "prepare"},
+        "retrieval_focus": {"$ref": "#/$defs/text"},
+        "query_expansions": {
+          "type": "array", "maxItems": 5, "uniqueItems": true,
+          "items": {"$ref": "#/$defs/text"}
+        },
+        "reason": {"$ref": "#/$defs/text"}
+      }
+    }
+  ],
+  "$defs": {
+    "text": {"type": "string", "minLength": 1, "maxLength": 1000, "pattern": "\\S"},
+    "statements": {
+      "type": "array", "maxItems": 30, "uniqueItems": true,
+      "items": {"$ref": "#/$defs/text"}
+    }
+  }
+}

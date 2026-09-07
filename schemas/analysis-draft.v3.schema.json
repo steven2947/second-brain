@@ -1,0 +1,779 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "第二大脑知识推演草稿 v3：显式采用边界",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "session_id",
+    "library_version",
+    "problem_framing",
+    "decisions",
+    "knowledge_groups",
+    "argument_relations",
+    "system_syntheses",
+    "roundtable",
+    "verdict",
+    "actions",
+    "learning_takeaways",
+    "continuation_options",
+    "next_chat_action"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 3
+    },
+    "session_id": {
+      "type": "string",
+      "pattern": "^call\\.[a-f0-9]{24}$"
+    },
+    "library_version": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{24}$"
+    },
+    "problem_framing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "surface_question",
+        "reframed_question",
+        "diagnostic_summary",
+        "key_uncertainties",
+        "hidden_assumptions",
+        "confidence"
+      ],
+      "properties": {
+        "surface_question": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reframed_question": {
+          "type": "string",
+          "minLength": 1
+        },
+        "diagnostic_summary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "key_uncertainties": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "hidden_assumptions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "confidence": {
+          "enum": [
+            "high",
+            "medium",
+            "low"
+          ]
+        }
+      }
+    },
+    "decisions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "card_id",
+          "decision",
+          "reason_code",
+          "reason"
+        ],
+        "properties": {
+          "card_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "decision": {
+            "enum": [
+              "admit",
+              "reject"
+            ]
+          },
+          "reason_code": {
+            "enum": [
+              "relevant",
+              "irrelevant",
+              "condition_mismatch",
+              "boundary_hit",
+              "duplicate",
+              "weak_evidence",
+              "source_ambiguous",
+              "lower_explanatory_value",
+              "outside_user_goal"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          },
+          "roles": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "enum": [
+                "support",
+                "challenge",
+                "boundary",
+                "alternative",
+                "evidence_auditor",
+                "action_translator"
+              ]
+            }
+          },
+          "principle": {
+            "type": "string"
+          },
+          "principle_gap": {
+            "type": "boolean"
+          },
+          "mechanism": {
+            "type": "string"
+          },
+          "assumptions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "user_context_refs": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "index"
+              ],
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "fact",
+                    "constraint",
+                    "assumption"
+                  ]
+                },
+                "index": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          "situation_mapping": {
+            "type": "string"
+          },
+          "fit": {
+            "enum": [
+              "direct",
+              "partial",
+              "analogy",
+              "conflict"
+            ]
+          },
+          "independent_judgment": {
+            "type": "string"
+          },
+          "confidence": {
+            "enum": [
+              "high",
+              "medium",
+              "low"
+            ]
+          },
+          "judgment_effect": {
+            "type": "string"
+          },
+          "non_applicable_conditions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "misuse_risks": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "quote": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "evidence_id",
+              "text"
+            ],
+            "properties": {
+              "evidence_id": {
+                "type": "string"
+              },
+              "text": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "adoption": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "claim",
+              "source_claim_type",
+              "evidence_ids",
+              "excluded_scope"
+            ],
+            "properties": {
+              "claim": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              "source_claim_type": {
+                "enum": [
+                  "author_claim",
+                  "quoted_other",
+                  "system_inference",
+                  "unclassified"
+                ]
+              },
+              "evidence_ids": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "excluded_scope": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "decision": {
+                  "const": "admit"
+                }
+              },
+              "required": [
+                "decision"
+              ]
+            },
+            "then": {
+              "required": [
+                "roles",
+                "principle",
+                "principle_gap",
+                "mechanism",
+                "assumptions",
+                "user_context_refs",
+                "situation_mapping",
+                "fit",
+                "independent_judgment",
+                "confidence",
+                "judgment_effect",
+                "non_applicable_conditions",
+                "misuse_risks",
+                "adoption"
+              ]
+            },
+            "else": {
+              "not": {
+                "required": [
+                  "adoption"
+                ]
+              }
+            }
+          }
+        ]
+      }
+    },
+    "argument_relations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "type",
+          "from_card_ids",
+          "to_claim",
+          "explanation"
+        ],
+        "properties": {
+          "type": {
+            "enum": [
+              "support",
+              "attack",
+              "contradict",
+              "undercut",
+              "complement",
+              "depend_on"
+            ]
+          },
+          "from_card_ids": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "to_claim": {
+            "type": "string",
+            "minLength": 1
+          },
+          "explanation": {
+            "type": "string",
+            "minLength": 1
+          },
+          "condition": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "knowledge_groups": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "title",
+          "purpose",
+          "card_ids",
+          "synthesis",
+          "open_questions"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "purpose": {
+            "type": "string",
+            "minLength": 1
+          },
+          "card_ids": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "synthesis": {
+            "type": "string",
+            "minLength": 1
+          },
+          "open_questions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "system_syntheses": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "title",
+          "type",
+          "content",
+          "basis_card_ids",
+          "confidence",
+          "validation_needed"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "type": {
+            "enum": [
+              "cross_book_synthesis",
+              "extension",
+              "hypothesis",
+              "analogy",
+              "new_option"
+            ]
+          },
+          "content": {
+            "type": "string",
+            "minLength": 1
+          },
+          "basis_card_ids": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "confidence": {
+            "enum": [
+              "high",
+              "medium",
+              "low"
+            ]
+          },
+          "validation_needed": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "roundtable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "support",
+        "opposition",
+        "alternative",
+        "evidence_audit"
+      ],
+      "properties": {
+        "support": {
+          "$ref": "#/$defs/seat"
+        },
+        "opposition": {
+          "$ref": "#/$defs/seat"
+        },
+        "alternative": {
+          "$ref": "#/$defs/seat"
+        },
+        "evidence_audit": {
+          "$ref": "#/$defs/seat"
+        }
+      }
+    },
+    "verdict": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "conclusion",
+        "reasoning_summary",
+        "basis_card_ids",
+        "decisive_user_context_refs",
+        "consensus",
+        "disagreements",
+        "uncertainties",
+        "confidence",
+        "change_conditions"
+      ],
+      "properties": {
+        "conclusion": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reasoning_summary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "basis_card_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "decisive_user_context_refs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/context_ref"
+          }
+        },
+        "consensus": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "disagreements": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "uncertainties": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "confidence": {
+          "enum": [
+            "high",
+            "medium",
+            "low"
+          ]
+        },
+        "change_conditions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "step",
+          "basis_card_ids",
+          "completion_criteria",
+          "validation_signal",
+          "stop_condition"
+        ],
+        "properties": {
+          "step": {
+            "type": "string",
+            "minLength": 1
+          },
+          "basis_card_ids": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "completion_criteria": {
+            "type": "string",
+            "minLength": 1
+          },
+          "validation_signal": {
+            "type": "string",
+            "minLength": 1
+          },
+          "stop_condition": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "learning_takeaways": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "method",
+          "how_to_reuse",
+          "basis_card_ids"
+        ],
+        "properties": {
+          "method": {
+            "type": "string",
+            "minLength": 1
+          },
+          "how_to_reuse": {
+            "type": "string",
+            "minLength": 1
+          },
+          "basis_card_ids": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "continuation_options": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "intent",
+          "title",
+          "description",
+          "next_move",
+          "basis_card_ids"
+        ],
+        "properties": {
+          "intent": {
+            "enum": [
+              "diagnose",
+              "learn",
+              "retrieve",
+              "challenge",
+              "act"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1
+          },
+          "next_move": {
+            "type": "string",
+            "minLength": 1
+          },
+          "basis_card_ids": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "next_chat_action": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "intent",
+        "reason",
+        "prompt"
+      ],
+      "properties": {
+        "intent": {
+          "enum": [
+            "diagnose",
+            "learn",
+            "retrieve",
+            "challenge",
+            "act"
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "prompt": {
+          "type": "string",
+          "minLength": 6
+        }
+      }
+    }
+  },
+  "$defs": {
+    "context_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "index"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "fact",
+            "constraint",
+            "assumption"
+          ]
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "seat": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "claim",
+        "card_ids"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "represented",
+            "gap"
+          ]
+        },
+        "claim": {
+          "type": "string",
+          "minLength": 1
+        },
+        "card_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "represented"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "card_ids": {
+                "minItems": 1
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "card_ids": {
+                "maxItems": 0
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

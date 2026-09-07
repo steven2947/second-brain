@@ -47,6 +47,28 @@ def _write_json_atomic(path, document, replace=False):
         Path(temporary).unlink(missing_ok=True)
 
 
+def _update_problem_file(path, event, expected_revision):
+    """path 为档案路径，event 为新事件，expected_revision 为调用者所读版本；POSIX 锁防并发覆盖。"""
+    import fcntl
+    from src.orchestration.intake import append_event, problem_snapshot
+    target = Path(path)
+    if target.is_symlink() or not target.is_file() or target.parent.is_symlink():
+        raise ValueError("INVALID_ARGUMENT: 档案必须是普通文件")
+    # 独立锁文件保持稳定 inode，不随档案的原子替换而失效；它不存用户内容。
+    lock_path = target.with_name(target.name + '.lock')
+    descriptor = os.open(lock_path, os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
+    try:
+        try:
+            fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as exc:
+            raise ValueError("PROBLEM_BUSY: 另一个窗口正在更新此档案，请稍后重读") from exc
+        updated = append_event(_read_input(target, '问题档案'), event, expected_revision)
+        _write_json_atomic(target, updated, replace=True)
+        return problem_snapshot(updated)
+    finally:
+        os.close(descriptor)
+
+
 def main(argv=None):
     """解析 argv 并执行明确命令；失败返回 JSON 错误和非零退出码。"""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -69,7 +91,14 @@ def main(argv=None):
     author_skill = commands.add_parser('author-skill');author_skill.add_argument('--compiled',required=True);author_skill.add_argument('--destination',required=True)
     local_import = commands.add_parser('import-local');local_import.add_argument('--book-dir',action='append',required=True);local_import.add_argument('--destination',required=True);local_import.add_argument('--allow-ready',action='store_true')
     package = commands.add_parser('package');package.add_argument('--project',default='.');package.add_argument('--destination',required=True);package.add_argument('--author-skill')
-    analyze = commands.add_parser('analyze');analyze.add_argument('--request',required=True);analyze.add_argument('--mode',choices=['quick','standard','deep'])
+    intake_start = commands.add_parser('intake-start');intake_start.add_argument('--question',required=True)
+    intake_start.add_argument('--goal',choices=['explain','analyze','compare','act','review'],default='analyze');intake_start.add_argument('--output',required=True)
+    intake_update = commands.add_parser('intake-update');intake_update.add_argument('--state',required=True);intake_update.add_argument('--event',required=True);intake_update.add_argument('--expected-revision',type=int,required=True)
+    intake_show = commands.add_parser('intake-show');intake_show.add_argument('--state',required=True)
+    analyze = commands.add_parser('analyze');analyze.add_argument('--mode',choices=['quick','standard','deep'])
+    analyze_source = analyze.add_mutually_exclusive_group(required=True)
+    analyze_source.add_argument('--request');analyze_source.add_argument('--problem')
+    analyze.add_argument('--previous-session',help='同一问题上一版会话；仅配合 --problem')
     analyze.add_argument('--retrieval-mode',choices=['keyword','semantic','hybrid'],default='hybrid');analyze.add_argument('--policy');analyze.add_argument('--output',required=True);analyze.add_argument('--replace',action='store_true')
     verify_analysis = commands.add_parser('validate-analysis');verify_analysis.add_argument('--session',required=True);verify_analysis.add_argument('--draft',required=True)
     verify_analysis.add_argument('--policy');verify_analysis.add_argument('--output',required=True);verify_analysis.add_argument('--replace',action='store_true')
@@ -93,12 +122,38 @@ def main(argv=None):
         elif args.command == 'package':
             from src.interfaces.delivery import build_release
             result = build_release(args.project,args.destination,args.library,args.author_skill)
+        elif args.command == 'intake-start':
+            from src.orchestration.intake import create_problem, problem_snapshot
+            state = create_problem(args.question,args.goal)
+            path = _write_json_atomic(args.output,state)
+            result = {'path':path,'snapshot':problem_snapshot(state)}
+        elif args.command == 'intake-update':
+            result = _update_problem_file(args.state,_read_input(args.event,'澄清事件'),args.expected_revision)
+        elif args.command == 'intake-show':
+            from src.orchestration.intake import problem_snapshot
+            result = problem_snapshot(_read_input(args.state,'问题档案'))
         elif args.command == 'analyze':
             from src.orchestration.policy import load_policy
             from src.orchestration.session import create_call_session
+            if args.previous_session and not args.problem:
+                raise ValueError('INVALID_ARGUMENT: --previous-session 仅用于 --problem')
+            if args.problem:
+                from src.orchestration.intake import compile_request
+                if args.replace:
+                    raise ValueError('INVALID_ARGUMENT: 问题档案分析请使用新输出路径，保留旧会话')
+                request = compile_request(
+                    _read_input(args.problem,'问题档案'),
+                    _read_input(args.previous_session,'上一会话') if args.previous_session else None,
+                )
+            else:
+                request = _read_input(args.request,'调用请求')
             library = Library(args.library);version = library.version
             policy = load_policy(args.policy)
-            session = create_call_session(library,_read_input(args.request,'调用请求'),args.mode or policy['default_mode'],policy,args.retrieval_mode)
+            index_root = Path(args.index_root) if args.index_root else Path(args.library).resolve().parent/'indexes'
+            session = create_call_session(
+                library, request, args.mode or policy['default_mode'],
+                policy, args.retrieval_mode, index_root=index_root, model_cache=index_root/'model-cache'
+            )
             path = _write_json_atomic(args.output,session,args.replace)
             result = {'path':path,'session_id':session['session_id'],'status':session['status'],'candidates':len(session['candidates'])}
         elif args.command == 'validate-analysis':

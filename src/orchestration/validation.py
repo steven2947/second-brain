@@ -1,6 +1,7 @@
 """核验 Agent 的语义判断，并从真实候选生成可追溯答案包。"""
 from collections import defaultdict
 
+from src.orchestration.adoption import build_adopted_witness, selected_candidates, validate_adoption
 from src.orchestration.models import validate_document
 from src.orchestration.policy import validate_policy
 from src.orchestration.session import session_id_for
@@ -8,6 +9,17 @@ from src.orchestration.session import session_id_for
 
 def _invalid(message):
     raise ValueError(f"INVALID_ANALYSIS_DRAFT: {message}")
+
+
+def _schema_name(stem, version):
+    """stem 为 analysis-draft 或 answer-packet；按版本返回兼容的 Schema 文件名。"""
+    if version == 1:
+        return f"{stem}.schema.json"
+    if version == 2:
+        return f"{stem}.v2.schema.json"
+    if version == 3:
+        return f"{stem}.v3.schema.json"
+    _invalid(f"不支持的分析草稿版本：{version}")
 
 
 def _validate_session(library, session):
@@ -67,6 +79,14 @@ def _validate_decisions(session, draft, policy):
             _invalid(f"采用候选缺少情境映射或判断作用：{identifier}")
         if not decision.get("principle", "").strip() and decision.get("principle_gap") is not True:
             _invalid(f"采用候选缺少原理解释或明确原理缺口：{identifier}")
+        if draft["schema_version"] in (2, 3):
+            if decision.get("principle_gap") is True:
+                _invalid(f"v{draft['schema_version']} 入席卡不能带原理缺口，应改为淘汰：{identifier}")
+            if not decision.get("mechanism", "").strip():
+                _invalid(f"v{draft['schema_version']} 入席卡缺少作用机制：{identifier}")
+            _validate_user_context_refs(session["request"], decision["user_context_refs"], identifier)
+        if draft["schema_version"] == 3:
+            validate_adoption(candidates[identifier], decision, policy["quote_max_chars"])
         if quote := decision.get("quote"):
             evidence = {item["id"]: item for item in candidates[identifier]["evidence"]}
             if quote["evidence_id"] not in evidence or quote["text"] not in evidence[quote["evidence_id"]]["text"]:
@@ -82,11 +102,48 @@ def _validate_decisions(session, draft, policy):
     return candidates, admitted
 
 
+def _validate_user_context_refs(request, refs, label):
+    """request 为用户上下文；确保映射指向真实事实、限制或显式假设。"""
+    fields = {"fact": "facts", "constraint": "constraints", "assumption": "assumptions"}
+    for ref in refs:
+        values = request[fields[ref["kind"]]]
+        if ref["index"] >= len(values):
+            _invalid(f"用户上下文引用越界：{label} {ref['kind']}[{ref['index']}]")
+
+
 def _validate_references(session, draft, admitted, candidates):
-    for category in ("agreements", "conflicts", "limitations", "alternatives"):
-        for finding in draft["cross_validation"][category]:
-            if not set(finding["card_ids"]).issubset(admitted):
-                _invalid(f"交叉验证 {category} 引用了未采用卡片")
+    if draft["schema_version"] == 1:
+        for category in ("agreements", "conflicts", "limitations", "alternatives"):
+            for finding in draft["cross_validation"][category]:
+                if not set(finding["card_ids"]).issubset(admitted):
+                    _invalid(f"交叉验证 {category} 引用了未采用卡片")
+    else:
+        for relation in draft["argument_relations"]:
+            if not set(relation["from_card_ids"]).issubset(admitted):
+                _invalid("论证关系引用了未采用卡片")
+        for seat_name, seat in draft["roundtable"].items():
+            if not set(seat["card_ids"]).issubset(admitted):
+                _invalid(f"圆桌席位 {seat_name} 引用了未采用卡片")
+        for takeaway in draft["learning_takeaways"]:
+            if not set(takeaway["basis_card_ids"]).issubset(admitted):
+                _invalid("学习收获引用了未采用卡片")
+        grouped = set()
+        for group in draft["knowledge_groups"]:
+            card_ids = set(group["card_ids"])
+            if not card_ids.issubset(admitted):
+                _invalid("知识组引用了未采用卡片")
+            grouped.update(card_ids)
+        if grouped != admitted:
+            _invalid("每张采用卡必须进入至少一个知识组")
+        for synthesis in draft["system_syntheses"]:
+            if not set(synthesis["basis_card_ids"]).issubset(admitted):
+                _invalid("系统综合引用了未采用卡片")
+        for option in draft["continuation_options"]:
+            if not set(option["basis_card_ids"]).issubset(admitted):
+                _invalid("继续路径引用了未采用卡片")
+        _validate_user_context_refs(
+            session["request"], draft["verdict"]["decisive_user_context_refs"], "verdict"
+        )
     if not set(draft["verdict"]["basis_card_ids"]).issubset(admitted):
         _invalid("综合裁决依据包含未采用卡片")
     for action in draft["actions"]:
@@ -106,11 +163,11 @@ def _validate_references(session, draft, admitted, candidates):
         _invalid("deep 模式存在挑战或限制候选，但没有纳入挑战/边界角色")
 
 
-def _build_witness(candidate, decision):
+def _build_witness(candidate, decision, version):
     card, book = candidate["card"], candidate["book"]
     chapters = list(dict.fromkeys(item["chapter"] for item in candidate["evidence"]))
     source_type = card.get("source_claim_type", "unclassified")
-    return {
+    witness = {
         "card_id": card["id"],
         "book_id": book["id"],
         "book_title": book["title"],
@@ -131,6 +188,18 @@ def _build_witness(candidate, decision):
         "evidence_ids": card["evidence_ids"],
         "quote": decision.get("quote"),
     }
+    if version == 2:
+        witness.update({
+            "mechanism": decision["mechanism"],
+            "assumptions": decision["assumptions"],
+            "user_context_refs": decision["user_context_refs"],
+            "fit": decision["fit"],
+            "independent_judgment": decision["independent_judgment"],
+            "confidence": decision["confidence"],
+            "non_applicable_conditions": decision["non_applicable_conditions"],
+            "misuse_risks": decision["misuse_risks"],
+        })
+    return witness
 
 
 def _build_sources(candidates, admitted, quote_max_chars):
@@ -161,7 +230,8 @@ def build_answer_packet(library, session, draft, policy):
     _validate_session(library, session)
     if session["policy"] != policy:
         _invalid("验证策略与建立调用会话时的策略不一致")
-    validate_document("analysis-draft.schema.json", draft)
+    version = draft.get("schema_version")
+    validate_document(_schema_name("analysis-draft", version), draft)
     if draft["session_id"] != session["session_id"] or draft["library_version"] != library.version:
         raise ValueError("SOURCE_VERSION_MISMATCH: 分析草稿与调用会话版本不一致")
     candidates, admitted = _validate_decisions(session, draft, policy)
@@ -171,10 +241,15 @@ def build_answer_packet(library, session, draft, policy):
     admitted_order = [item["card_id"] for item in session["candidates"] if item["card_id"] in admitted]
     rejected = [{"card_id": item["card_id"], "reason_code": item["reason_code"], "reason": item["reason"]}
                 for item in draft["decisions"] if item["decision"] == "reject"]
-    witnesses = [_build_witness(candidates[identifier], decision_index[identifier]) for identifier in admitted_order]
+    public_candidates = selected_candidates(candidates, decision_index) if version == 3 else candidates
+    witnesses = [
+        build_adopted_witness(public_candidates[identifier], decision_index[identifier], session)
+        if version == 3 else _build_witness(candidates[identifier], decision_index[identifier], version)
+        for identifier in admitted_order
+    ]
     request = session["request"]
     packet = {
-        "schema_version": 1,
+        "schema_version": version,
         "session_id": session["session_id"],
         "library_version": session["library_version"],
         "mode": session["mode"],
@@ -190,10 +265,25 @@ def build_answer_packet(library, session, draft, policy):
             "rejected": rejected,
         },
         "witness_cards": witnesses,
-        "cross_validation": draft["cross_validation"],
         "verdict": draft["verdict"],
         "actions": draft["actions"],
-        "sources": _build_sources(candidates, admitted, policy["quote_max_chars"]),
+        "sources": _build_sources(public_candidates, admitted, policy["quote_max_chars"]),
     }
-    validate_document("answer-packet.schema.json", packet)
+    if "context" in request:
+        packet["problem"]["context"] = request["context"]
+    if version == 1:
+        packet["cross_validation"] = draft["cross_validation"]
+    else:
+        packet["call_ledger"]["books_with_candidates"] = list(dict.fromkeys(
+            item["book_id"] for item in packet["call_ledger"]["candidates"]
+        ))
+        packet["argument_relations"] = draft["argument_relations"]
+        packet["problem_framing"] = draft["problem_framing"]
+        packet["knowledge_groups"] = draft["knowledge_groups"]
+        packet["system_syntheses"] = draft["system_syntheses"]
+        packet["roundtable"] = draft["roundtable"]
+        packet["learning_takeaways"] = draft["learning_takeaways"]
+        packet["continuation_options"] = draft["continuation_options"]
+        packet["next_chat_action"] = draft["next_chat_action"]
+    validate_document(_schema_name("answer-packet", version), packet)
     return packet

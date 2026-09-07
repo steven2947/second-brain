@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "第二大脑知识推演答案包 v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "session_id", "library_version", "mode", "problem", "problem_framing", "call_ledger", "witness_cards", "knowledge_groups", "argument_relations", "system_syntheses", "roundtable", "verdict", "actions", "learning_takeaways", "continuation_options", "next_chat_action", "sources"],
+  "properties": {
+    "schema_version": {"const": 2},
+    "session_id": {"type": "string", "pattern": "^call\\.[a-f0-9]{24}$"},
+    "library_version": {"type": "string", "pattern": "^[a-f0-9]{24}$"},
+    "mode": {"enum": ["quick", "standard", "deep"]},
+    "problem": {"type": "object"},
+    "problem_framing": {"type": "object"},
+    "call_ledger": {
+      "type": "object",
+      "required": ["books_searched", "books_with_candidates", "queries", "retrieval_mode", "retrieval_degraded", "candidates", "admitted", "rejected"],
+      "properties": {
+        "books_searched": {"type": "array", "items": {"type": "string"}},
+        "books_with_candidates": {"type": "array", "items": {"type": "string"}},
+        "queries": {"type": "array", "items": {"type": "string"}},
+        "retrieval_mode": {"type": "string"},
+        "retrieval_degraded": {"type": "boolean"},
+        "candidates": {"type": "array", "items": {"type": "object"}},
+        "admitted": {"type": "array", "items": {"type": "string"}},
+        "rejected": {"type": "array", "items": {"type": "object"}}
+      }
+    },
+    "witness_cards": {"type": "array", "items": {"type": "object"}},
+    "knowledge_groups": {"type": "array", "minItems": 1, "items": {"type": "object"}},
+    "argument_relations": {"type": "array", "items": {"type": "object"}},
+    "system_syntheses": {"type": "array", "items": {"type": "object"}},
+    "roundtable": {"type": "object"},
+    "verdict": {"type": "object"},
+    "actions": {"type": "array", "items": {"type": "object"}},
+    "learning_takeaways": {"type": "array", "minItems": 1, "items": {"type": "object"}},
+    "continuation_options": {"type": "array", "minItems": 1, "items": {"type": "object"}},
+    "next_chat_action": {"type": "object"},
+    "sources": {"type": "array", "items": {"type": "object"}}
+  }
+}

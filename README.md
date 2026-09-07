@@ -10,6 +10,8 @@
 - [单书验收报告](docs/mvp-verification.md)：范围、检索复测、真实回答、交付验证和已知不足。
 - [问答示例](docs/mvp-answer-examples.md)：基于真实检索与证据的回答。
 - [可复用蒸馏流程](docs/distillation-workflow.md)：提示词、准备、复核、装配与交付。
+- [自适应澄清接入](docs/adaptive-intake.md)：问题档案、最多3轮自由追问、补充事实进入检索与后续分析；本地实现，不影响书籍蒸馏。
+- [采用主张隔离 v3](docs/adopted-claims-v3.md)：本次采用内容与原卡审计分开，保留旧版兼容、充分原理讲解和系统延伸。
 - [产品设计](docs/product-design.md) · [架构](docs/architecture.md) · [开发指南](docs/development.md)。
 
 ## 产品组成

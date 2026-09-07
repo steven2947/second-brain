@@ -33,7 +33,7 @@ class OrchestrationModelTests(unittest.TestCase):
         for mutation in (
             {"question": ""},
             {"mode": "unbounded"},
-            {"query_expansions": ["一", "二", "三", "四"]},
+            {"query_expansions": ["一", "二", "三", "四", "五", "六", "七"]},
         ):
             invalid = {**request, **mutation}
             with self.subTest(mutation=mutation), self.assertRaisesRegex(ValueError, "INVALID_CALL_REQUEST"):
@@ -47,10 +47,14 @@ class OrchestrationModelTests(unittest.TestCase):
 
     def test_all_call_schemas_are_valid_draft_2020_12(self):
         for filename in (
+            "intake-event.schema.json",
+            "problem-state.schema.json",
             "call-request.schema.json",
             "call-session.schema.json",
             "analysis-draft.schema.json",
             "answer-packet.schema.json",
+            "analysis-draft.v2.schema.json",
+            "answer-packet.v2.schema.json",
         ):
             with self.subTest(filename=filename):
                 schema = json.loads((SCHEMA_ROOT / filename).read_text(encoding="utf-8"))
