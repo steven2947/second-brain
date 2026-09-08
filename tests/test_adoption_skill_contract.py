@@ -34,7 +34,7 @@ class AdoptionSkillContractTests(unittest.TestCase):
         for rule in original_rules:
             with self.subTest(rule=rule[:50]):
                 self.assertIn(rule, current)
-        for phrase in ('最多3轮', '建议', '自由', '独立立场—交叉质询—主持裁决', '继续和 AI 聊'):
+        for phrase in ('最多5轮', '建议', '自由', '独立立场—交叉质询—主持裁决', '继续和 AI 聊'):
             self.assertIn(phrase, current)
 
     def test_output_rules_forbid_audit_reference_as_adoption(self):
@@ -43,6 +43,22 @@ class AdoptionSkillContractTests(unittest.TestCase):
         for phrase in ('adopted_claim', 'excluded_scope', 'original_card_ref', '只用于审计',
                        '不能因为隔离原卡字段就省略限制', '作者字段有值不等于', '系统延伸'):
             self.assertIn(phrase, rules)
+
+    def test_grilling_reference_is_wired_and_attributed(self):
+        """检查参考提示词可达和适配边界；不把关键词存在当自然语言效果验收。"""
+        skill = (ROOT/'skills/second-brain/SKILL.md').read_text()
+        workflow = (ROOT/'skills/second-brain/references/query-workflow.md').read_text()
+        prompt = (ROOT/'prompts/answer-orchestrator.v3.md').read_text()
+        reference = (ROOT/'skills/second-brain/references/grilling-intake.md').read_text()
+        for content in (skill, workflow, prompt):
+            self.assertIn('grilling-intake.md', content)
+        for phrase in ('决策树', '等待用户回答', '重塑', '事实题保持中性',
+                       'retrieval_focus', '收窄', '不是上游原文的圆桌功能',
+                       'Copyright (c) 2026 Matt Pocock',
+                       '3cca18b368ae95cdbdebbff572ccafa662551015'):
+            self.assertIn(phrase, reference)
+        for phrase in ('argument_relations', 'roundtable', 'verdict', 'actions', '第6轮'):
+            self.assertIn(phrase, prompt)
 
 
 if __name__ == '__main__':

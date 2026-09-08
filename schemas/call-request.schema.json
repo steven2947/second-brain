@@ -24,7 +24,7 @@
         "state_hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
         "desired_outcome": {"type": "string", "maxLength": 1000},
         "unknowns": {"$ref": "#/$defs/statements"},
-        "clarification_rounds": {"type": "integer", "minimum": 0, "maximum": 3},
+        "clarification_rounds": {"type": "integer", "minimum": 0, "maximum": 5},
         "stop_reason": {"enum": ["sufficient", "round_limit", "analyze_now", "unknown"]},
         "previous_session_id": {"type": ["string", "null"], "pattern": "^call\\.[a-f0-9]{24}$"}
       }

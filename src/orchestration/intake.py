@@ -17,7 +17,7 @@ def _digest(state):
 def create_problem(question, goal="analyze"):
     """question 为完整用户问题，goal 为任务类型；创建独立问题，不用于重置旧问题。"""
     state = {"schema_version": 1, "problem_id": "problem." + uuid.uuid4().hex,
-             "question": question, "goal": goal, "events": []}
+             "question": question, "goal": goal, "clarification_limit": 5, "events": []}
     state["state_hash"] = _digest(state)
     problem_snapshot(state)
     return state
@@ -27,8 +27,8 @@ def _apply(snapshot, event):
     """snapshot 为重放中的快照，event 为已校验事件；仅在内存执行状态转换。"""
     kind = event["type"]
     if kind == "ask":
-        if snapshot["clarification_rounds"] >= 3:
-            raise ValueError("CLARIFICATION_LIMIT: 同一问题最多3轮主动澄清")
+        if snapshot["clarification_rounds"] >= snapshot["clarification_limit"]:
+            raise ValueError(f"CLARIFICATION_LIMIT: 同一问题最多{snapshot['clarification_limit']}轮主动澄清")
         if snapshot["intake_closed"]:
             raise ValueError("INTAKE_CLOSED: 已停止主动背景澄清，可接收用户自发补充")
         if snapshot["pending_question"]:
@@ -55,7 +55,7 @@ def _apply(snapshot, event):
         snapshot["ready"] = True
         snapshot["intake_closed"] = True
         snapshot["stop_reason"] = snapshot["stop_reason"] or (
-            "round_limit" if snapshot["clarification_rounds"] == 3 else "sufficient"
+            "round_limit" if snapshot["clarification_rounds"] == snapshot["clarification_limit"] else "sufficient"
         )
         snapshot["retrieval_focus"] = event["retrieval_focus"]
         snapshot["query_expansions"] = copy.deepcopy(event["query_expansions"])
@@ -71,6 +71,8 @@ def problem_snapshot(state):
         "question": state["question"], "goal": state["goal"],
         "desired_outcome": "", "facts": [], "constraints": [], "assumptions": [], "unknowns": [],
         "clarification_rounds": 0, "pending_question": None, "asked_questions": [],
+        # 无显式上限的历史档案保留三轮语义，不能因升级改变旧请求的停止原因。
+        "clarification_limit": state.get("clarification_limit", 3),
         "intake_closed": False, "ready": False, "stop_reason": None,
         "retrieval_focus": None, "query_expansions": [],
     }

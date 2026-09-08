@@ -1,5 +1,6 @@
 """自编场景验证澄清状态、检索接入和旧接口兼容；不把机制通过视为真实回答质量。"""
 import copy
+import hashlib
 import json
 import tempfile
 import unittest
@@ -41,7 +42,52 @@ def prepare(focus="模糊任务 小步骤", expansions=None):
 
 
 class IntakeTests(unittest.TestCase):
-    """0轮、提前结束、3轮上限、用户主动深化和同题检索差异。"""
+    """0轮、提前结束、5轮上限、用户主动深化和同题检索差异。"""
+
+    def test_new_limit_batch_and_fourth_fifth_rounds(self):
+        """同批互不依赖问题只计一次等待，第4/5轮真正进入编译请求。"""
+        state = create_problem("如何决定？")
+        self.assertEqual(state["clarification_limit"], 5)
+        state = apply(state, ask("Q1：希望得到什么结果？\nQ2：目前可支配多少时间？"))
+        self.assertEqual(problem_snapshot(state)["clarification_rounds"], 1)
+        state = apply(state, update())
+        for index in range(2, 6):
+            state = apply(apply(state, ask(f"基于新回答，本轮关键问题{index}？")), update())
+            if index >= 4:
+                request = compile_request(apply(state, prepare()))
+                self.assertEqual(request["context"]["clarification_rounds"], index)
+                self.assertEqual(request["context"]["stop_reason"],
+                                 "round_limit" if index == 5 else "sufficient")
+
+    def test_legacy_state_replays_three_round_limit_and_old_request(self):
+        """构造升级前无上限字段的档案，验证停止原因、请求形状和历史关联。"""
+        state = create_problem("如何推进？")
+        del state["clarification_limit"]
+        del state["state_hash"]
+        state["state_hash"] = hashlib.sha256(json.dumps(
+            state, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+        ).encode()).hexdigest()
+        for index in range(3):
+            state = apply(apply(state, ask(f"旧问题{index}？")), update())
+        with self.assertRaisesRegex(ValueError, "CLARIFICATION_LIMIT"):
+            apply(state, ask("旧档案不能偷偷多问一轮？"))
+        state = apply(state, prepare())
+        context = compile_request(state)["context"]
+        self.assertEqual(context, {
+            "problem_id": state["problem_id"], "revision": 7, "desired_outcome": "",
+            "unknowns": [], "clarification_rounds": 3, "stop_reason": "round_limit",
+            "state_hash": state["state_hash"], "previous_session_id": None,
+        })
+        original = copy.deepcopy(state)
+        session = create_call_session(Library(LIBRARY), compile_request(state),
+                                      "standard", load_policy(), "keyword")
+        revised = apply(apply(state, update(intent="supplement")), prepare())
+        self.assertEqual(compile_request(revised, session)["context"]["previous_session_id"],
+                         session["session_id"])
+        self.assertEqual(state, original)
+        changed_limit = {**state, "clarification_limit": 5}
+        with self.assertRaisesRegex(ValueError, "INVALID_PROBLEM_STATE"):
+            problem_snapshot(changed_limit)
 
     def test_zero_rounds_compiles_outcome_separately_from_task_type(self):
         state = apply(create_problem("如何推进？", "act"), update({
@@ -70,15 +116,15 @@ class IntakeTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "INTAKE_CLOSED"):
             apply(ready, ask("换个圆桌角色再问背景？"))
 
-    def test_three_round_limit_survives_rephrasing_and_supplement(self):
+    def test_five_round_limit_survives_rephrasing_and_supplement(self):
         state = create_problem("如何选择？")
-        for index in range(3):
+        for index in range(5):
             state = apply(apply(state, ask(f"当前关键问题{index}是什么？")), update())
         with self.assertRaisesRegex(ValueError, "CLARIFICATION_LIMIT"):
             apply(state, ask("换个说法再问一次？"))
         state = apply(state, prepare())
         state = apply(state, update({"facts": ["用户自发补充新事实"]}, "supplement"))
-        self.assertEqual(problem_snapshot(state)["clarification_rounds"], 3)
+        self.assertEqual(problem_snapshot(state)["clarification_rounds"], 5)
         with self.assertRaisesRegex(ValueError, "INTAKE_NOT_READY"):
             compile_request(state)
         with self.assertRaisesRegex(ValueError, "CLARIFICATION_LIMIT"):
@@ -86,13 +132,13 @@ class IntakeTests(unittest.TestCase):
         state = apply(state, prepare("新事实 检查不确定性"))
         self.assertEqual(compile_request(state)["context"]["stop_reason"], "round_limit")
 
-    def test_wait_for_user_including_third_question(self):
+    def test_wait_for_user_including_fifth_question(self):
         state = create_problem("如何选择？")
-        for index in range(3):
+        for index in range(5):
             state = apply(state, ask(f"问题{index}？"))
             with self.assertRaisesRegex(ValueError, "AWAITING_USER"):
                 apply(state, prepare())
-            if index < 2:
+            if index < 4:
                 with self.assertRaisesRegex(ValueError, "AWAITING_USER"):
                     apply(state, ask("不能在同一轮连续发问"))
             state = apply(state, update())

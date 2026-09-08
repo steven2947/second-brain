@@ -1,8 +1,10 @@
 # 自适应澄清怎样接入知识分析
 
-状态：本地实现；本次功能分支发布同时包含v3采用隔离，具体提交与推送结果见PR。程序提供问题档案、最多3轮状态约束和检索编译；AI 仍负责理解用户、自由生成问题、知识取舍和最终答案。并非自动模型聊天服务。
+状态：本地实现；本次功能分支发布同时包含v3采用隔离，具体提交与推送结果见PR。程序提供问题档案、新问题最多5轮状态约束和检索编译；AI 仍负责理解用户、自由生成问题、知识取舍和最终答案。并非自动模型聊天服务。
 
 [本地验收与实际变更对照](adaptive-intake-verification.md)：自动测试与真实效果验收分开记录。
+
+2026-09-08 更新：[Grilling 适配与验证计划](plans/2026-09-08-grilling-intake.md)。新问题通常3–5轮、最多5轮，不足3轮也可提前结束；历史无 clarification_limit 的档案仍保留三轮上限和原停止原因，不批量修改历史档案。上面旧验收报告对应更新前版本，不作为本次五轮效果证据。当前分轮提示词见 [Grilling 参考](../skills/second-brain/references/grilling-intake.md)，提问分支由 AI 判断，程序未实现自动决策树求解。
 
 ## 职责与信息流
 
@@ -14,7 +16,7 @@
 | desired_outcome | 与检索焦点共同进入查询；答案包保留真实目标，避免把“行动”当具体目标 |
 | facts / constraints | Agent 据此生成焦点；仍进入原有 user_context_refs，供知识与用户情境绑定 |
 | assumptions / unknowns | 分开保存；不得伪装成用户确认事实，分析给出边界和分支 |
-| clarification_rounds | 从事件日志计算，最多3轮；不是让 AI 自报轮数 |
+| clarification_rounds | 从事件日志计算，新问题最多5轮；不是让 AI 自报轮数 |
 | revision / previous_session_id | 追踪前后变化；新事实建立新会话，不改旧答案 |
 
 ## Agent 操作示例（自编场景，非用户真实情况）
@@ -49,7 +51,7 @@ python -m src.interfaces.cli intake-update --state data/jobs/problem.json --even
 }
 ```
 
-用 expected-revision 1 更新。此后是否继续问、问什么由 AI 判断，不固定第二轮主题。最多3轮；可以1轮或2轮后提前结束。用户说“不知道”或“直接分析”则将 intent 标成 unknown 或 analyze_now，立即停止主动背景追问。纯自发补充为 supplement，不消耗轮数。
+用 expected-revision 1 更新。此后是否继续问、问什么由 AI 判断，不固定第二轮主题。新问题最多5轮；可以1轮或2轮后提前结束。用户说“不知道”或“直接分析”则将 intent 标成 unknown 或 analyze_now，立即停止主动背景追问。纯自发补充为 supplement，不消耗轮数。
 
 准备分析的 prepare.json 示例：
 
@@ -76,7 +78,7 @@ python -m src.interfaces.cli --library <实际用户库> analyze --problem data/
 
 - 只是问“再讲讲这个原理”：继续解释现有证据，必要时补读，不重填背景。
 - 提供新事实或纠正事实：提交 user_update，changes 为相关字段的完整新值；旧消息和旧值保留在事件中，其他字段不变。准备新的检索焦点，再用 analyze --problem ... --previous-session data/jobs/session-1.json --output data/jobs/session-2.json。
-- 同一问题不另开档案、不重置轮数；第一轮正式分析后不重开背景问卷。解释、学习和用户自发深入不受三轮限制。
+- 同一问题不另开档案、不重置轮数；第一轮正式分析后不重开背景问卷。解释、学习和用户自发深入不受主动澄清轮数限制。
 - 新回答说明新事实如何改变或不改变原建议；不能为了显示“更新”硬改结论，也不能只改建议而不解释知识依据。
 
 ## 已知边界
