@@ -1,13 +1,16 @@
 """验证调用层 CLI 的结构化输出、原子写入与兼容性。"""
 import contextlib
+import hashlib
 import io
 import json
+import shutil
 import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
 from src.interfaces.cli import main
+from src.knowledge.library import Library
 
 
 ROOT = Path(__file__).parents[1]
@@ -74,6 +77,58 @@ def draft_for(session):
     }
 
 
+def rewrite_second_candidate(candidate):
+    """将复制的 sample candidate 改写为独立的第二本书；candidate 为临时候选目录。"""
+    manifest_path = candidate / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    book = manifest["books"][0]
+    book["id"] = "book.second"
+    book["title"] = "第二本独立测试书"
+    manifest["library_id"] = "library.second-test"
+    manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+    replacements = {
+        "knowledge.demo.": "knowledge.second.",
+        "evidence.demo.": "evidence.second.",
+        "relation.demo.": "relation.second.",
+        "book.demo": "book.second",
+    }
+    for path in sorted((candidate / "cards").glob("*.json")):
+        item = json.loads(path.read_text(encoding="utf-8"))
+        for old, new in replacements.items():
+            for field in ("id", "book_id"):
+                if field in item and isinstance(item[field], str):
+                    item[field] = item[field].replace(old, new)
+            item["evidence_ids"] = [value.replace(old, new) for value in item["evidence_ids"]]
+        path.write_text(json.dumps(item, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+    source_path = candidate / "sources" / "demo.md"
+    source_text = source_path.read_text(encoding="utf-8").replace("模糊", "含糊").replace("小步骤", "小行动")
+    source_path.write_text(source_text, encoding="utf-8")
+    source_sha256 = hashlib.sha256(source_text.encode("utf-8")).hexdigest()
+    for path in sorted((candidate / "evidence").glob("*.json")):
+        item = json.loads(path.read_text(encoding="utf-8"))
+        for old, new in replacements.items():
+            for field in ("id", "book_id"):
+                if field in item and isinstance(item[field], str):
+                    item[field] = item[field].replace(old, new)
+        item["source_sha256"] = source_sha256
+        item["text"] = item["text"].replace("模糊", "含糊").replace("小步骤", "小行动")
+        path.write_text(json.dumps(item, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+    relation_path = candidate / "relations.json"
+    graph = json.loads(relation_path.read_text(encoding="utf-8"))
+    for edge in graph["edges"]:
+        for field in ("id", "from", "to"):
+            for old, new in replacements.items():
+                if isinstance(edge[field], str):
+                    edge[field] = edge[field].replace(old, new)
+        edge["evidence_ids"] = [
+            value.replace("evidence.demo.", "evidence.second.") for value in edge["evidence_ids"]
+        ]
+    relation_path.write_text(json.dumps(graph, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
 class OrchestrationCliTests(unittest.TestCase):
     """新命令必须安全写文件，并保持原有查询接口。"""
 
@@ -126,6 +181,48 @@ class OrchestrationCliTests(unittest.TestCase):
         self.assertEqual(result["schema_version"], 1)
         self.assertIn("library_version", result)
         self.assertEqual(result["result"][0]["id"], "book.demo")
+
+    def test_merge_candidates_returns_wrapped_result_and_readable_library(self):
+        """合并命令按候选顺序生成可由 Library 读取的候选库。"""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            first, second, destination = (root / name for name in ("first", "second", "merged"))
+            shutil.copytree(LIBRARY, first)
+            shutil.copytree(LIBRARY, second)
+            rewrite_second_candidate(second)
+
+            status, result, stderr = run_cli([
+                "merge-candidates",
+                "--candidate", str(first),
+                "--candidate", str(second),
+                "--destination", str(destination),
+                "--library-id", "library.cli-test",
+            ])
+
+            self.assertEqual((status, stderr), (0, ""))
+            self.assertEqual(result["schema_version"], 1)
+            self.assertIsNone(result["library_version"])
+            self.assertEqual(result["result"]["path"], str(destination.resolve()))
+            self.assertEqual(len(Library(destination).list_books()), 2)
+
+    def test_merge_candidates_reports_duplicate_candidate_as_json_error(self):
+        """重复候选导致 JSON 错误并返回退出码 2。"""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            candidate, destination = root / "candidate", root / "merged"
+            shutil.copytree(LIBRARY, candidate)
+
+            status, result, stderr = run_cli([
+                "merge-candidates",
+                "--candidate", str(candidate),
+                "--candidate", str(candidate),
+                "--destination", str(destination),
+                "--library-id", "library.cli-duplicate-test",
+            ])
+
+            self.assertEqual(status, 2)
+            self.assertIsNone(result)
+            self.assertIn("DUPLICATE", stderr)
 
     def test_analyze_passes_explicit_index_and_model_cache_paths(self):
         with tempfile.TemporaryDirectory() as temporary:

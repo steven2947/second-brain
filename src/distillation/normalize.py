@@ -32,13 +32,17 @@ def normalize_markdown(text, included_ranges):
         start = heading.start()
         end = headings[index + 1].start() if index + 1 < len(headings) else len(text)
         level, title = len(heading.group(1)), heading.group(2).strip()
-        hierarchy = [(lev, value) for lev, value in hierarchy if lev < level] + [(level, title)]
+        included = any(left <= start < right for left, right in ranges)
+        # 完整标题栈供排除清单审计；正文只继承已纳入的祖先，不改原文层级或位置。
+        hierarchy = [(lev, value, kept) for lev, value, kept in hierarchy if lev < level]
+        hierarchy.append((level, title, included))
         identifier = f'section.{fingerprint[:12]}.{index:03d}'
         section = {'id': identifier, 'title': title, 'level': level,
-                   'path': ' / '.join(value for _, value in hierarchy), 'start': start, 'end': end}
-        if not any(left <= start < right for left, right in ranges):
+                   'path': ' / '.join(value for _, value, _ in hierarchy), 'start': start, 'end': end}
+        if not included:
             excluded.append({**section, 'reason': '不在已确认正文范围：前置材料、推荐书单、致谢或参考索引'})
             continue
+        section['path'] = ' / '.join(value for _, value, kept in hierarchy if kept)
         section['paragraph_ids'] = []
         body_start = heading.end()
         for item in re.finditer(r'\S.*?(?=\r?\n[ \t]*\r?\n|\Z)', text[body_start:end], re.S):

@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "plan_id": "plan.ten-book-distillation",
+  "waves": {
+    "1": 5,
+    "2": 5
+  },
+  "books": [
+    {
+      "order": 1,
+      "wave": 1,
+      "book_id": "book.card-notes-writing",
+      "title": "卡片笔记写作法",
+      "domain": "知识管理",
+      "source_relative_path": "剩余126本/01_认知与思维/卡片笔记写作法/卡片笔记写作法.md",
+      "status": "planned"
+    },
+    {
+      "order": 2,
+      "wave": 1,
+      "book_id": "book.asking-the-right-questions",
+      "title": "学会提问",
+      "domain": "批判性思维",
+      "source_relative_path": "首批42本/学会提问/学会提问.md",
+      "status": "planned"
+    },
+    {
+      "order": 3,
+      "wave": 1,
+      "book_id": "book.peak-practice",
+      "title": "刻意练习",
+      "domain": "学习与能力",
+      "source_relative_path": "剩余126本/02_学习方法与个人成长/刻意练习/刻意练习.md",
+      "status": "planned"
+    },
+    {
+      "order": 4,
+      "wave": 1,
+      "book_id": "book.zero-to-one",
+      "title": "从0到1",
+      "domain": "创业与创新",
+      "source_relative_path": "剩余126本/06_创业与商业/从0到1/从0到1.md",
+      "status": "planned"
+    },
+    {
+      "order": 5,
+      "wave": 1,
+      "book_id": "book.positioning",
+      "title": "定位",
+      "domain": "产品与营销",
+      "source_relative_path": "剩余126本/07_营销与增长/定位/定位.md",
+      "status": "planned"
+    },
+    {
+      "order": 6,
+      "wave": 2,
+      "book_id": "book.poor-charlie-almanack",
+      "title": "穷查理宝典",
+      "domain": "思维模型与决策",
+      "source_relative_path": "剩余126本/01_认知与思维/穷查理宝典/穷查理宝典.md",
+      "status": "planned"
+    },
+    {
+      "order": 7,
+      "wave": 2,
+      "book_id": "book.principles",
+      "title": "原则",
+      "domain": "决策与管理",
+      "source_relative_path": "剩余126本/01_认知与思维/原则/原则.md",
+      "status": "planned"
+    },
+    {
+      "order": 8,
+      "wave": 2,
+      "book_id": "book.scarcity",
+      "title": "稀缺",
+      "domain": "行为与经济",
+      "source_relative_path": "剩余126本/01_认知与思维/稀缺/稀缺.md",
+      "status": "planned"
+    },
+    {
+      "order": 9,
+      "wave": 2,
+      "book_id": "book.index-fund-investing",
+      "title": "指数基金投资指南",
+      "domain": "投资基础",
+      "source_relative_path": "剩余126本/04_投资经典/指数基金投资指南/指数基金投资指南.md",
+      "status": "planned"
+    },
+    {
+      "order": 10,
+      "wave": 2,
+      "book_id": "book.economic-way-of-thinking",
+      "title": "经济学的思维方式",
+      "domain": "经济分析",
+      "source_relative_path": "首批42本/经济学的思维方式/经济学的思维方式.md",
+      "status": "planned"
+    }
+  ]
+}

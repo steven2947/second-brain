@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://second-brain.local/schemas/distillation-batch-plan.schema.json",
+  "title": "Ten-book distillation batch plan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "plan_id", "books", "waves"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "plan_id": {
+      "type": "string",
+      "pattern": "^plan\\.[a-z0-9-]+$"
+    },
+    "books": {
+      "type": "array",
+      "minItems": 10,
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "order",
+          "wave",
+          "book_id",
+          "title",
+          "domain",
+          "source_relative_path",
+          "status"
+        ],
+        "properties": {
+          "order": {"type": "integer", "minimum": 1, "maximum": 10},
+          "wave": {"enum": [1, 2]},
+          "book_id": {
+            "type": "string",
+            "pattern": "^book\\.[a-z0-9-]+$"
+          },
+          "title": {"type": "string", "minLength": 1},
+          "domain": {"type": "string", "minLength": 1},
+          "source_relative_path": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^(?!/)(?![A-Za-z]:[\\\\/]).+$"
+          },
+          "status": {
+            "enum": ["planned", "prepared", "distilled", "accepted", "blocked"]
+          }
+        }
+      }
+    },
+    "waves": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["1", "2"],
+      "properties": {
+        "1": {"type": "integer", "minimum": 0},
+        "2": {"type": "integer", "minimum": 0}
+      }
+    }
+  }
+}
