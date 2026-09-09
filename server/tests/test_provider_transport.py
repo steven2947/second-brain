@@ -1,4 +1,4 @@
-"""自编回环HTTP响应测试真实传输；不是供应商或真实模型效果验收。"""
+"""自编回环HTTP响应测试真实SSE流式传输；不是供应商或真实模型效果验收。"""
 import importlib
 import json
 import threading
@@ -10,30 +10,35 @@ from ai.ports import GenerationRequest, ModelFailure
 
 
 class ProviderTransportTests(SimpleTestCase):
-    """只监听回环随机端口，检查结构、原文、重定向、取消与超时。"""
+    """只监听回环随机端口，检查SSE结构、增量拼接、重定向、取消与超时。"""
 
     def setUp(self):
         """无参数；不存在实现时先明确失败；测试服务器仅返回自编内容。"""
         self.assertTrue((Path(__file__).resolve().parents[1]/'ai/provider.py').exists(), '缺少模型传输')
         self.module = importlib.import_module('ai.provider')
         self.received = []
-        self.payload = {'choices':[{'message':{'content':'{"ok": true}'},'finish_reason':'stop'}],
-                        'model':'actual-test-model','usage':{'prompt_tokens':12,'completion_tokens':4}}
+        self.events = [
+            {'choices':[{'delta':{'role':'assistant'},'finish_reason':None}]},
+            {'choices':[{'delta':{'content':'{"ok": true}'},'finish_reason':'stop'}]},
+            {'choices':[],'usage':{'prompt_tokens':12,'completion_tokens':4},'model':'actual-test-model'},
+        ]
         self.status, self.delay = 200, 0
         test = self
         class Handler(BaseHTTPRequestHandler):
             def do_POST(self):
-                """无参数；读取本测试POST并按测试配置发送自编响应。"""
+                """无参数；读取本测试POST并按测试配置发送自编SSE响应。"""
                 test.received.append((self.path, json.loads(self.rfile.read(int(self.headers['Content-Length']))), dict(self.headers)))
                 if test.delay:
                     threading.Event().wait(test.delay)
                 self.send_response(test.status)
-                self.send_header('Content-Type','application/json')
+                self.send_header('Content-Type','text/event-stream')
                 if test.status == 302:
                     self.send_header('Location', '/must-not-follow')
                 self.end_headers()
                 try:
-                    self.wfile.write(json.dumps(test.payload).encode())
+                    for event in test.events:
+                        self.wfile.write(b'data: ' + json.dumps(event).encode() + b'\n\n')
+                    self.wfile.write(b'data: [DONE]\n\n')
                 except (BrokenPipeError,ConnectionResetError):
                     pass
 
@@ -60,7 +65,7 @@ class ProviderTransportTests(SimpleTestCase):
             time.monotonic()+seconds,60,cancelled)
 
     def test_actual_post_preserves_context_and_actual_usage(self):
-        """无参数；执行真实网络POST，解析供应商报告而非配置模型名猜测计量。"""
+        """无参数；执行真实SSE POST，解析供应商报告而非配置模型名猜测计量。"""
         result = self.provider.generate(self.request())
         self.assertEqual(result.content, {'ok':True})
         self.assertEqual((result.input_tokens,result.output_tokens,result.model),(12,4,'actual-test-model'))
@@ -68,18 +73,30 @@ class ProviderTransportTests(SimpleTestCase):
         self.assertEqual(path,'/v1/chat/completions')
         self.assertEqual(json.loads(body['messages'][1]['content'])['message'],'  原话\n')
         self.assertEqual(body['max_tokens'],60)
+        self.assertTrue(body['stream'])
         self.assertNotIn('Authorization',headers)
+
+    def test_content_deltas_accumulate_across_chunks(self):
+        """无参数；内容分多个增量到达时按序拼接。"""
+        self.events = [
+            {'choices':[{'delta':{'content':'{"ok"'},'finish_reason':None}]},
+            {'choices':[{'delta':{'content ':': true}'},'finish_reason':None}]},
+            {'choices':[{'delta':{},'finish_reason':'stop'}]},
+        ]
+        self.events[1]['choices'][0]['delta'] = {'content':': true}'}
+        result = self.provider.generate(self.request())
+        self.assertEqual(result.content, {'ok':True})
 
     def test_unknown_usage_stays_unknown(self):
         """无参数；供应商未报告token时不可填0。"""
-        del self.payload['usage']
+        self.events = [event for event in self.events if 'usage' not in event]
         result = self.provider.generate(self.request())
         self.assertIsNone(result.input_tokens)
         self.assertIsNone(result.output_tokens)
 
     def test_redirect_and_private_error_are_not_followed_or_exposed(self):
         """无参数；既不重发也不回显原始供应商错误。"""
-        self.status,self.payload = 302,{'private':'secret test detail'}
+        self.status,self.events = 302,[{'private':'secret test detail'}]
         with self.assertRaises(ModelFailure) as caught:
             self.provider.generate(self.request())
         self.assertEqual(str(caught.exception),'MODEL_UNAVAILABLE')
@@ -100,7 +117,7 @@ class ProviderTransportTests(SimpleTestCase):
 
     def test_invalid_output_and_unapproved_configuration_fail_closed(self):
         """无参数；拒绝截断JSON、越界网络配置及自动demo回退。"""
-        self.payload['choices'][0]['finish_reason'] = 'length'
+        self.events[-2]['choices'][0]['finish_reason'] = 'length'
         with self.assertRaises(ModelFailure) as caught:
             self.provider.generate(self.request())
         self.assertEqual(caught.exception.code,'MODEL_OUTPUT_INVALID')

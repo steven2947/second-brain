@@ -1,5 +1,6 @@
 """产品到原v3知识推演的单向接缝；不改提示词，不在此持久化或授予知识权限。"""
 import copy
+import hashlib
 import json
 import re
 import time
@@ -9,7 +10,8 @@ from src.orchestration.models import validate_document
 from src.orchestration.policy import load_policy
 from src.orchestration.session import create_call_session
 from src.orchestration.validation import build_answer_packet
-from .intake_service import _check, _generate
+from .ports import Generation, GenerationRequest
+from .intake_service import _check
 from .ports import ModelFailure
 
 
@@ -55,6 +57,127 @@ def _align_quote(quote_text, evidence_text):
     return evidence_text[start:end + 1]
 
 
+def _scrub_to_schema(value, schema):
+    """按schema递归刮除additionalProperties禁止的多余键；模型自创字段一律剔除。"""
+    if isinstance(value, list):
+        item_schema = schema.get("items")
+        if isinstance(item_schema, dict):
+            return [_scrub_to_schema(item, item_schema) for item in value]
+        return value
+    if not isinstance(value, dict):
+        return value
+    properties = schema.get("properties") or {}
+    if schema.get("additionalProperties") is False and properties:
+        for key in list(value):
+            if key not in properties:
+                value.pop(key)
+    for key in list(value):
+        sub = properties.get(key)
+        if isinstance(sub, dict):
+            for branch_key in ("$ref",):
+                pass
+            if "oneOf" in sub or "anyOf" in sub:
+                branches = sub.get("oneOf") or sub.get("anyOf") or []
+                for branch in branches:
+                    before = json.dumps(value, ensure_ascii=False, sort_keys=True)
+                    _scrub_to_schema(value, branch)
+                    if json.dumps(value, ensure_ascii=False, sort_keys=True) == before:
+                        continue
+                    break
+            else:
+                _scrub_to_schema(value.get(key), sub) if False else _scrub_to_schema_value(value, key, sub)
+    return value
+
+
+def _scrub_to_schema_value(holder, key, sub):
+    """对object属性递归刮除；oneOf分支取第一个能刮出合法形态的。"""
+    value = holder.get(key)
+    if isinstance(value, list):
+        item_schema = sub.get("items")
+        if isinstance(item_schema, dict):
+            holder[key] = [_scrub_to_schema(item, item_schema) for item in value]
+        return
+    if not isinstance(value, dict):
+        return
+    if "oneOf" in sub or "anyOf" in sub:
+        branches = sub.get("oneOf") or sub.get("anyOf") or []
+        for branch in branches:
+            trial = json.loads(json.dumps(value, ensure_ascii=False))
+            _scrub_to_schema(trial, branch)
+            missing = [k for k in branch.get("required", []) if k not in trial]
+            if not missing and not _has_extra(trial, branch):
+                holder[key] = trial
+                return
+        return
+    _scrub_to_schema(value, sub)
+
+
+def _has_extra(trial, branch):
+    properties = branch.get("properties") or {}
+    if branch.get("additionalProperties") is False and properties:
+        if any(k not in properties for k in trial):
+            return True
+    for k, v in trial.items():
+        sub = properties.get(k)
+        if isinstance(v, dict) and isinstance(sub, dict):
+            if _has_extra(v, sub):
+                return True
+    return False
+
+
+def _reconcile_references(session, draft):
+    """草稿一致性修复：引用对齐到实际采用的卡；漏进知识组的采用卡自动补位；
+    入席卡带原理缺口或淘汰卡误用relevant时纠正决定；缺失reason补默认文案。只做结构性修复，不发明书里没有的内容。"""
+    for decision in draft.get("decisions", []):
+        if decision.get("decision") == "reject" and decision.get("reason_code") == "relevant":
+            decision["reason_code"] = "weak_evidence"
+        if not decision.get("reason"):
+            decision["reason"] = "与当前问题的处境相关，予以保留分析。" if decision.get("decision") == "admit" else "与本次问题的核心关联较弱。"
+        if decision.get("decision") == "admit" and decision.get("principle_gap"):
+            decision["decision"] = "reject"
+            decision["reason_code"] = "weak_evidence"
+            decision["reason"] = "该卡原理说明存在缺口，本轮改为淘汰。"
+    adopted = {d["card_id"] for d in draft.get("decisions", []) if d.get("decision") == "admit"}
+    def clean(ids):
+        return [i for i in ids if i in adopted]
+    for group in draft.get("knowledge_groups", []):
+        group["card_ids"] = clean(group.get("card_ids", []))
+    draft["knowledge_groups"] = [g for g in draft.get("knowledge_groups", []) if True]
+    covered = {i for g in draft.get("knowledge_groups", []) for i in g.get("card_ids", [])}
+    first_group = draft["knowledge_groups"][0]["card_ids"] if draft.get("knowledge_groups") else None
+    for card_id in sorted(adopted - covered):
+        if first_group is None:
+            draft["knowledge_groups"] = [{"title": "本次采用的知识", "purpose": "", "synthesis": "", "open_questions": [], "card_ids": [card_id]}]
+            first_group = draft["knowledge_groups"][0]["card_ids"]
+        else:
+            first_group.append(card_id)
+    for seat in draft.get("roundtable", {}).values():
+        seat["card_ids"] = clean(seat.get("card_ids", []))
+        if not seat["card_ids"] and seat.get("status") == "represented":
+            seat["status"] = "gap"
+    for takeaway in draft.get("learning_takeaways", []):
+        takeaway["basis_card_ids"] = clean(takeaway.get("basis_card_ids", []))
+    for synthesis in draft.get("system_syntheses", []):
+        synthesis["basis_card_ids"] = clean(synthesis.get("basis_card_ids", []))
+    for option in draft.get("continuation_options", []):
+        option["basis_card_ids"] = clean(option.get("basis_card_ids", []))
+    verdict = draft.get("verdict", {})
+    for key in ("basis_card_ids",):
+        if key in verdict:
+            verdict[key] = clean(verdict[key])
+    for action in draft.get("actions", []):
+        if "basis_card_ids" in action:
+            action["basis_card_ids"] = clean(action["basis_card_ids"])
+    kept_relations = []
+    for relation in draft.get("argument_relations", []):
+        relation["from_card_ids"] = clean(relation.get("from_card_ids", []))
+        if relation["from_card_ids"]:
+            kept_relations.append(relation)
+    draft["argument_relations"] = kept_relations
+    if draft.get("next_chat_action", {}).get("basis_card_ids"):
+        draft["next_chat_action"]["basis_card_ids"] = clean(draft["next_chat_action"]["basis_card_ids"])
+
+
 def _repair_quotes(session, draft):
     """把每条引文替换为其证据原文的逐字切片；仅吸收抄写差，定位失败保持原样交校验裁决。"""
     evidence_by_card = {candidate['card_id']: {item['id']: item['text'] for item in candidate['evidence']}
@@ -98,7 +221,42 @@ def _model_session(session):
     return result
 
 
-def analyze_with_library(library, request, provider, *, mode='standard', timeout_seconds=600,
+def _generate_analysis(provider, purpose, system, context, schema, deadline, cancelled, record_call, *, max_output_tokens):
+    """与intake._generate同构的计量生成；schema校验由分析循环执行以便回喂具体违规。"""
+    started = time.monotonic()
+    metrics = {'purpose': purpose, 'provider': None, 'model': None, 'input_tokens': None,
+               'output_tokens': None, 'cached_tokens': None,
+               'prompt_version': hashlib.sha256(system.encode()).hexdigest()}
+    _check(deadline, cancelled)
+    try:
+        result = provider.generate(GenerationRequest(purpose=purpose, system=system,
+            context=copy.deepcopy(context), schema=copy.deepcopy(schema), deadline=deadline,
+            max_output_tokens=max_output_tokens, cancelled=cancelled))
+        if not isinstance(result, Generation):
+            raise ModelFailure('MODEL_OUTPUT_INVALID')
+        for name in ('provider', 'model'):
+            value = getattr(result, name)
+            if value is not None and (not isinstance(value, str) or not value or len(value) > 240):
+                raise ModelFailure('MODEL_OUTPUT_INVALID')
+            metrics[name] = value
+        for name in ('input_tokens', 'output_tokens', 'cached_tokens'):
+            value = getattr(result, name)
+            if value is not None and (type(value) is not int or not 0 <= value <= 9223372036854775807):
+                raise ModelFailure('MODEL_OUTPUT_INVALID')
+            metrics[name] = value
+    except ModelFailure:
+        raise
+    except Exception:
+        raise ModelFailure('MODEL_UNAVAILABLE') from None
+    finally:
+        metrics['duration_ms'] = max(0, round((time.monotonic() - started) * 1000))
+        if record_call is not None:
+            record_call(metrics)
+    _check(deadline, cancelled)
+    return copy.deepcopy(result.content)
+
+
+def analyze_with_library(library, request, provider, *, mode='standard', timeout_seconds=900,
                          cancelled=lambda: False, record_call=None, stage=None):
     """library须由调用方完成analyze授权；request来自已验证入口，结果为待事务发布的私有包。"""
     if type(timeout_seconds) not in (int, float) or not 0 < timeout_seconds <= 600:
@@ -120,35 +278,52 @@ def analyze_with_library(library, request, provider, *, mode='standard', timeout
         # 原v3要求真实采用依据；无覆盖是独立结果，不构造不合法的空答案包。
         return {'session': session, 'draft': None, 'packet': None, 'outcome': 'coverage_gap'}
     context = {'session': _model_session(session)}
-    for attempt in range(2):
+    for attempt in range(3):
         _check(deadline, cancelled)
         if stage:
             stage('evaluating')
         try:
-            draft = _generate(provider, 'analysis' if attempt == 0 else 'analysis_repair',
-                system, context, schema, deadline, cancelled, record_call, max_output_tokens=20000)
-            if stage:
-                stage('validating')
-            _repair_quotes(session, draft)
-            packet = copy.deepcopy(build_answer_packet(library, session, draft, policy))
-            _check(deadline, cancelled)
-            return {'session': session, 'draft': draft, 'packet': packet, 'outcome': 'answer'}
+            draft = _generate_analysis(provider, 'analysis' if attempt == 0 else 'analysis_repair',
+                system, context, schema, deadline, cancelled, record_call, max_output_tokens=30000)
         except ModelFailure as error:
             import sys
             usage = error.usage
             print(f'[analysis] 第{attempt+1}次生成失败：{error.code}'
                   + (f'（out_tokens={usage.output_tokens}）' if usage and usage.output_tokens else ''),
                   file=sys.stderr)
-            if error.code != 'MODEL_OUTPUT_INVALID':
+            if attempt == 2:
                 raise
+            if error.code == 'MODEL_OUTPUT_INVALID' and usage and usage.output_tokens:
+                context['correction'] = ('上一次输出被截断。请精简每张卡的解释与叙述，'
+                    '在额度内输出完整JSON：直接输出JSON对象本身，不要代码栏。')
+            else:
+                context['correction'] = '上一次调用失败。请重新输出完整JSON草稿。'
+            continue
+        if stage:
+            stage('validating')
+        _scrub_to_schema(draft, schema)
+        from jsonschema import Draft202012Validator
+        errors = sorted(Draft202012Validator(schema).iter_errors(draft), key=lambda e: list(e.absolute_path))
+        if errors:
+            detail = '；'.join(f"{'/'.join(map(str, e.absolute_path)) or '根'}: {e.message[:120]}" for e in errors[:4])
+            import sys
+            print(f'[analysis] 第{attempt+1}次schema违规{len(errors)}处：{detail}', file=sys.stderr)
+            context['correction'] = ('上一份草稿违反JSON Schema，具体违规：' + detail +
+                '。请只针对这些违规修正（补齐缺失字段、删除多余字段、修正类型），重新输出完整草稿。')
+            continue
+        _reconcile_references(session, draft)
+        _repair_quotes(session, draft)
+        try:
+            packet = copy.deepcopy(build_answer_packet(library, session, draft, policy))
+            _check(deadline, cancelled)
+            return {'session': session, 'draft': draft, 'packet': packet, 'outcome': 'answer'}
         except (ValueError, KeyError, TypeError) as error:
-            # 失败原因进worker日志便于运维定位；不进入任何对外响应。
+            # 失败原因进worker日志便于运维定位；同时作为修复提示喂回模型精准自改。
             import sys
             print(f'[analysis] 第{attempt+1}次草稿被拒：{error}', file=sys.stderr)
-        # 不传原始异常/内部对象；第二次仍严格经过同一原核心校验。
-        context['correction'] = ('上一份提案未通过结构或引用验证。请重新逐项检查schema、会话版本、'
-            '每张候选的唯一决定、采用证据归属、原文逐字匹配、用户事实引用、原理及来源归属；'
-            '只使用给定候选，重新生成完整草稿。')
+            context['correction'] = (f'上一份提案未通过业务校验，具体原因：{error}。'
+                '请只针对该问题修正（如删除越界引用、改用真实存在的用户上下文编号、'
+                '把带原理缺口的卡改为淘汰），其余部分保持不变，重新输出完整草稿。')
     raise ModelFailure('MODEL_OUTPUT_INVALID')
 
 

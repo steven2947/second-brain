@@ -151,3 +151,25 @@
   .account-strip { flex-direction: column; align-items: flex-start; }
   .account-content { padding: 20px 16px 28px; border-radius: 14px; }
 }
+
+/* —— 提问优先家页 —— */
+.home-hero-row { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+.home-hero-copy h1 { font-size: clamp(26px, 3vw, 34px); margin: 8px 0 6px; }
+.home-hero-sub { color: var(--ink-soft); font-size: 14px; margin: 0; }
+.home-welcome-reader { width: clamp(84px, 9vw, 118px); transform: rotate(3deg); mix-blend-mode: multiply; }
+.home-ask { position: relative; display: grid; gap: 14px; padding: 30px 32px 24px; margin: 0 0 26px; background: #fff; border: 1px solid var(--border-soft); border-radius: 6px 18px 6px 16px; box-shadow: 0 4px 18px rgba(90, 76, 52, .12); }
+.home-ask .journal-tape { width: 140px; height: 28px; top: -13px; }
+.home-ask .section-label { font-size: 18px; }
+.home-ask textarea { width: 100%; min-height: 120px; resize: vertical; padding: 16px 18px; border: 1px solid var(--border); border-radius: 6px 14px 6px 12px; background: #fff; color: var(--ink); font: inherit; font-size: 16.5px; line-height: 1.9; box-shadow: inset 0 1px 4px rgba(90, 76, 52, .06); }
+.home-ask textarea:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-color: var(--accent); }
+.home-ask textarea::placeholder { color: var(--ink-soft); opacity: .75; }
+.home-ask-row { display: flex; flex-wrap: wrap; align-items: end; gap: 14px 18px; }
+.home-ask-field { display: grid; gap: 6px; }
+.home-ask-field label { font-size: 12.5px; color: var(--ink-soft); }
+.home-ask-field select { min-height: 44px; border: 1px solid var(--border); border-radius: 10px; background: #fff; color: var(--ink); padding: 8px 12px; font: inherit; }
+.home-ask-go { margin-left: auto; padding: 13px 26px; font-size: 16px; }
+@media (max-width: 700px) {
+  .home-ask { padding: 24px 20px 20px; }
+  .home-ask-row { align-items: stretch; }
+  .home-ask-go { width: 100%; justify-content: center; }
+}

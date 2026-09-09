@@ -39,7 +39,7 @@ def process_one(owner_id, *, provider=None):
         provider = MeteredProvider(provider, lease)
         if not heartbeat(lease):
             return True
-        remaining = min(600,(lease.deadline-timezone.now()).total_seconds())
+        remaining = min(900,(lease.deadline-timezone.now()).total_seconds())
         if remaining<=0:
             raise ModelFailure('RUN_TIMEOUT')
         renewal = threading.Thread(target=_renew,args=(lease,stopped,cancelled),daemon=True)
@@ -59,7 +59,7 @@ def process_one(owner_id, *, provider=None):
             publish_question(lease,result)
         else:
             from answers.publisher import analyze_release, publish_answer
-            remaining = min(600, (lease.deadline-timezone.now()).total_seconds())
+            remaining = min(900, (lease.deadline-timezone.now()).total_seconds())
             if remaining <= 0:
                 raise ModelFailure('RUN_TIMEOUT')
             library, analysis = analyze_release(lease, result, provider,

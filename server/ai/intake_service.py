@@ -82,18 +82,18 @@ def _generate(provider, purpose, system, context, schema, deadline, cancelled, r
     return copy.deepcopy(result.content)
 
 
-def advance_intake(state, message, intent, provider: Provider, *, timeout_seconds=600,
+def advance_intake(state, message, intent, provider: Provider, *, timeout_seconds=900,
                    cancelled=lambda: False, record_call=None):
     """state为已归属问题核心状态，message为原消息、intent为明确意图；返回私有结果供事务发布。"""
     return advance_messages(state, [{'content': message, 'intent': intent, 'sequence': 1}], provider,
         timeout_seconds=timeout_seconds, cancelled=cancelled, record_call=record_call)
 
 
-def advance_messages(state, messages, provider: Provider, *, timeout_seconds=600,
+def advance_messages(state, messages, provider: Provider, *, timeout_seconds=900,
                      cancelled=lambda: False, record_call=None):
     """messages为按sequence排序的未消费原消息；先逐条更新事实，再仅计划一次追问或分析。"""
     if (not isinstance(messages, list) or not messages
-            or type(timeout_seconds) not in (int, float) or not 0 < timeout_seconds <= 600):
+            or type(timeout_seconds) not in (int, float) or not 0 < timeout_seconds <= 900):
         raise ModelFailure('INVALID_INPUT')
     previous = 0
     for item in messages:
@@ -119,15 +119,20 @@ def advance_messages(state, messages, provider: Provider, *, timeout_seconds=600
     try:
         updated, events = state, []
         def _generate_once(purpose, system, context, schema):
-            """同预算内对一次性格式失误重试一次；只针对MODEL_OUTPUT_INVALID，不掩盖其他失败。"""
+            """同预算内对一次性格式失误或瞬时传输失败各重试一次；其余失败照常上抛。"""
+            retryable = {'MODEL_OUTPUT_INVALID', 'MODEL_UNAVAILABLE'}
+            def once(purpose, hint):
+                return _generate(provider, purpose, system + hint, context, schema, deadline, cancelled, record_call)
             try:
                 return _generate(provider, purpose, system, context, schema, deadline, cancelled, record_call)
             except ModelFailure as error:
-                if error.code != 'MODEL_OUTPUT_INVALID':
+                if error.code not in retryable:
                     raise
                 _check(deadline, cancelled)
-                return _generate(provider, purpose + '_retry', system, context, schema,
-                                 deadline, cancelled, record_call)
+                # 带着拒绝原因重试，模型能针对性修正而非盲改。
+                return _generate(provider, purpose + '_retry',
+                    system + f'\n注意：上一次输出未通过校验（{error.code}）。请只输出JSON对象本身：不要代码栏包裹、不要重复键、所有数组与括号必须闭合、字段严格符合schema。',
+                    context, schema, deadline, cancelled, record_call)
         for item in messages:
             extracted = _generate_once('extract', EXTRACT_INSTRUCTION,
                 {'snapshot': snapshot, 'message': item['content'], 'intent': item['intent']},

@@ -118,7 +118,7 @@ def _enqueue(user, problem_id, data, key, kind):
             content='请直接分析当前问题。' if kind == 'analysis' else data['content'],
             intent='analyze_now' if kind == 'analysis' else data['intent'],
             client_message_id=data.get('client_message_id'), published_at=timezone.now())
-        job = Job.objects.create(owner=current, deadline=timezone.now() + timedelta(seconds=600))
+        job = Job.objects.create(owner=current, deadline=timezone.now() + timedelta(seconds=900))
         problem.revision += 1
         run = AnalysisRun.objects.create(owner=current, problem=problem, release_id=problem.release_id,
             job=job, input_revision=problem.revision, kind=kind,

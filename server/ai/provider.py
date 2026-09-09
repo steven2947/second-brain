@@ -95,48 +95,69 @@ class JSONProvider:
             await asyncio.gather(task,return_exceptions=True)
 
     async def _post(self, request):
-        """request仅传原数据和服务端schema；成功与错误响应均不记录正文。"""
+        """request为一次生成；SSE流式读取避免长响应被网关掐断，成功与错误响应均不记录正文。"""
         budget = max(0.001,request.deadline-time.monotonic())
         payload = {'model':self.model,'messages':[
             {'role':'system','content':request.system+'\n只返回符合以下JSON Schema的JSON对象，直接输出JSON本身，不要用Markdown代码栏或任何文字包裹：\n'+json.dumps(request.schema,ensure_ascii=False)},
             {'role':'user','content':json.dumps(request.context,ensure_ascii=False)}],
-            'response_format':{'type':'json_object'},'max_tokens':request.max_output_tokens,'stream':False}
+            'response_format':{'type':'json_object'},'max_tokens':request.max_output_tokens,
+            'stream':True,'stream_options':{'include_usage':True}}
         if self._extra_body:
             payload.update(self._extra_body)
         body = json.dumps(payload,ensure_ascii=False,allow_nan=False).encode()
         if len(body)>2*1024*1024:
             raise ModelFailure('INVALID_INPUT')
-        headers = {'Content-Type':'application/json','Accept':'application/json'}
+        headers = {'Content-Type':'application/json','Accept':'text/event-stream'}
         if self._key:
             headers['Authorization'] = 'Bearer '+self._key
+        model = None
+        usage = {}
+        finish = None
+        parts = []
+        size = 0
         async with httpx.AsyncClient(timeout=httpx.Timeout(budget,connect=min(10,budget)),
                                      trust_env=False,follow_redirects=False) as client:
             async with client.stream('POST',self.url,headers=headers,content=body) as response:
                 if response.status_code != 200:
                     raise ModelFailure('MODEL_UNAVAILABLE')
-                chunks,size = [],0
-                async for chunk in response.aiter_bytes():
+                async for line in response.aiter_lines():
                     _check(request)
-                    size += len(chunk)
+                    line = line.strip()
+                    if not line.startswith('data:'):
+                        continue
+                    data = line[5:].strip()
+                    size += len(data)
                     if size>2*1024*1024:
                         raise ModelFailure('MODEL_OUTPUT_INVALID')
-                    chunks.append(chunk)
-        value = _json(b''.join(chunks))
-        usage = value.get('usage') or {}
-        model = value.get('model')
+                    if data == '[DONE]':
+                        break
+                    value = _json(data.encode())
+                    chunk_model = value.get('model')
+                    if isinstance(chunk_model,str) and 1<=len(chunk_model)<=240:
+                        model = chunk_model
+                    chunk_usage = value.get('usage')
+                    if isinstance(chunk_usage,dict):
+                        usage = chunk_usage
+                    choices = value.get('choices') or []
+                    if choices:
+                        choice = choices[0]
+                        if choice.get('finish_reason'):
+                            finish = choice['finish_reason']
+                        message = choice.get('message') or choice.get('delta') or {}
+                        if message.get('tool_calls') or message.get('refusal'):
+                            raise ValueError('unexpected tools')
+                        piece = message.get('content')
+                        if isinstance(piece,str) and piece:
+                            parts.append(piece)
         if model is not None and (not isinstance(model,str) or not 1<=len(model)<=240):
             raise ModelFailure('MODEL_OUTPUT_INVALID')
         reported = Generation(content={},provider=self.provider,model=model,
             input_tokens=_tokens(usage.get('prompt_tokens')),output_tokens=_tokens(usage.get('completion_tokens')),
             cached_tokens=_tokens((usage.get('prompt_tokens_details') or {}).get('cached_tokens')))
+        if finish != 'stop':
+            raise ModelFailure('MODEL_OUTPUT_INVALID', usage=reported)
         try:
-            choices = value['choices']
-            if not isinstance(choices,list) or len(choices)!=1 or choices[0].get('finish_reason')!='stop':
-                raise ValueError('invalid choices')
-            message = choices[0]['message']
-            if message.get('tool_calls') or message.get('refusal'):
-                raise ValueError('unexpected tools')
-            content = _json(_unwrap_fenced(message['content']))
+            content = _json(_unwrap_fenced(''.join(parts)))
             if not isinstance(content,dict):
                 raise ValueError('invalid content')
         except (ValueError,TypeError,KeyError,IndexError,AttributeError,RecursionError):
