@@ -25,7 +25,20 @@ class MultiBookMergeTests(unittest.TestCase):
         shutil.copytree(sample, self.first)
         shutil.copytree(sample, self.second)
         self._rewrite_second_candidate(self.second)
+        self.first_coverage = self._write_coverage(self.first, "book.demo")
+        self.second_coverage = self._write_coverage(self.second, "book.second")
         self.destination = root / "merged"
+
+    @staticmethod
+    def _write_coverage(candidate, book_id):
+        """写入测试覆盖率 fixture；candidate 为临时候选目录，book_id 为书籍标识，返回原始字节。"""
+        contents = json.dumps(
+            {"book_id": book_id, "status": "test_fixture", "sections": ["fixture-section"]},
+            ensure_ascii=False,
+            indent=2,
+        ).encode("utf-8") + b"\n"
+        (candidate / "coverage.json").write_bytes(contents)
+        return contents
 
     @staticmethod
     def _rewrite_second_candidate(candidate):
@@ -95,6 +108,90 @@ class MultiBookMergeTests(unittest.TestCase):
         self.assertEqual(result["evidence"], 4)
         self.assertEqual(result["relations"], 2)
         self.assertEqual(result["source_candidates"], [str(self.first.resolve()), str(self.second.resolve())])
+        self.assertEqual((self.destination / "coverage/book.demo.json").read_bytes(), self.first_coverage)
+        self.assertEqual((self.destination / "coverage/book.second.json").read_bytes(), self.second_coverage)
+
+    def test_legacy_candidate_without_coverage_remains_compatible(self):
+        """没有 coverage.json 的旧候选仍可合并，并保留空 coverage 目录。"""
+        sample = Path(__file__).parents[1] / "examples/sample-library"
+        candidate = Path(self.temp.name) / "legacy-without-coverage"
+        destination = Path(self.temp.name) / "legacy-merged"
+        shutil.copytree(sample, candidate)
+        merge_libraries([candidate], destination, "library.legacy-coverage-test")
+        self.assertEqual(list((destination / "coverage").iterdir()), [])
+
+    def test_accepted_candidate_requires_acceptance_marker(self):
+        """accepted_candidate 输出必须拒绝无标记或评测状态的输入。"""
+        for status in ("example_only", "evaluation_candidate", "blocked"):
+            with self.subTest(status=status):
+                for candidate in (self.first, self.second):
+                    manifest_path = candidate / "manifest.json"
+                    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+                    manifest["is_example"] = False
+                    manifest.pop("release_status", None)
+                    manifest["books"][0]["status"] = status
+                    manifest_path.write_text(
+                        json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+                    )
+                with self.assertRaisesRegex(ValueError, "ACCEPT"):
+                    merge_libraries([self.first, self.second], self.destination, "library.acceptance-test", "accepted_candidate")
+                self.assertFalse(self.destination.exists())
+                sample = Path(__file__).parents[1] / "examples/sample-library"
+                shutil.copytree(sample, self.first, dirs_exist_ok=True)
+                shutil.copytree(sample, self.second, dirs_exist_ok=True)
+                self._rewrite_second_candidate(self.second)
+                self.first_coverage = self._write_coverage(self.first, "book.demo")
+                self.second_coverage = self._write_coverage(self.second, "book.second")
+
+    def test_accepted_candidate_rejects_example_flag_even_with_marker(self):
+        """is_example=true 即使带 accepted 标记也不得升格。"""
+        for candidate in (self.first, self.second):
+            manifest_path = candidate / "manifest.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest["is_example"] = True
+            manifest["release_status"] = "accepted_candidate"
+            manifest["books"][0]["status"] = "accepted"
+            manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "ACCEPT"):
+            merge_libraries([self.first, self.second], self.destination, "library.example-acceptance-test", "accepted_candidate")
+        self.assertFalse(self.destination.exists())
+
+    def test_accepted_candidate_accepts_explicit_markers(self):
+        """显式 accepted_candidate 或 accepted 标记可以通过接受门禁。"""
+        first_manifest_path = self.first / "manifest.json"
+        first_manifest = json.loads(first_manifest_path.read_text(encoding="utf-8"))
+        first_manifest["is_example"] = False
+        first_manifest["release_status"] = "accepted_candidate"
+        first_manifest["books"][0]["status"] = "distilled"
+        first_manifest_path.write_text(json.dumps(first_manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        second_manifest_path = self.second / "manifest.json"
+        second_manifest = json.loads(second_manifest_path.read_text(encoding="utf-8"))
+        second_manifest["is_example"] = False
+        second_manifest.pop("release_status", None)
+        second_manifest["books"][0]["status"] = "accepted"
+        second_manifest_path.write_text(json.dumps(second_manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+        result = merge_libraries([self.first, self.second], self.destination, "library.explicit-acceptance-test", "accepted_candidate")
+        self.assertEqual(result["release_status"], "accepted_candidate")
+
+    def test_current_naval_pilot_agent_reviewed_status_is_accepted_compatibility(self):
+        """当前已发布 Naval 的 agent_reviewed_pilot 形态可向后兼容接受。"""
+        naval = Path(__file__).parents[1] / "data/library/versions/138e911ba4d4581b71d1c09c/"
+        if not naval.is_dir():
+            self.skipTest("当前本地 Naval 已发布候选不存在")
+        result = merge_libraries([naval], self.destination, "library.naval-compatibility-test", "accepted_candidate")
+        self.assertEqual(result["books"], 1)
+        self.assertEqual(result["release_status"], "accepted_candidate")
+
+    def test_merge_lock_rejects_competing_call_without_touching_destination(self):
+        """同一目标的已有合并锁应拒绝竞争调用并保留锁与目标状态。"""
+        lock = self.destination.parent / f".{self.destination.name}.merge.lock"
+        lock.mkdir()
+        self.addCleanup(lambda: lock.rmdir())
+        with self.assertRaisesRegex(ValueError, "MERGE_BUSY"):
+            merge_libraries([self.first], self.destination, "library.lock-test")
+        self.assertFalse(self.destination.exists())
+        self.assertTrue(lock.is_dir())
 
     def test_duplicate_book_or_card_id_is_rejected_without_destination(self):
         """重复书籍或记录标识必须在任何输出创建前拒绝。"""

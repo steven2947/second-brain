@@ -10,6 +10,36 @@ from src.distillation.jobs import write_json
 from src.knowledge.library import content_version, load_records, read_json, validate_library
 
 
+def _validate_acceptance_marker(manifest, book, candidate):
+    """验证 accepted_candidate 的输入门禁；manifest 为候选清单，book 为唯一书籍，candidate 为候选目录。"""
+    if manifest.get("is_example") is True:
+        raise ValueError(f"ACCEPTANCE_REQUIRED: 示例候选不能标记为 accepted_candidate: {candidate}")
+
+    rejected_statuses = {"example_only", "evaluation_candidate", "blocked"}
+    accepted_statuses = {"accepted_candidate", "accepted"}
+    markers = (
+        manifest.get("release_status"),
+        manifest.get("status"),
+        book.get("release_status"),
+        book.get("status"),
+    )
+    if any(marker in rejected_statuses for marker in markers):
+        raise ValueError(f"ACCEPTANCE_REQUIRED: 候选状态未通过接受门禁: {candidate}")
+    if any(marker in accepted_statuses for marker in markers):
+        return
+
+    # 兼容当前已发布 Naval 的历史 assemble manifest：它没有顶层 release_status，
+    # 但固定的库/书籍标识和 agent_reviewed_pilot 状态是可审计的旧接受标记。
+    if (
+        manifest.get("library_id") == "library.naval-almanack-pilot"
+        and book.get("id") == "book.naval-almanack"
+        and book.get("author_id") == "author.naval-ravikant"
+        and book.get("status") == "agent_reviewed_pilot"
+    ):
+        return
+    raise ValueError(f"ACCEPTANCE_REQUIRED: 候选缺少 accepted_candidate 或 accepted 标记: {candidate}")
+
+
 def _source_path_for_merge(candidate, evidence, source_root, candidate_index):
     """计算合并后证据来源路径；candidate 为候选目录，evidence 为证据记录，source_root 为来源目录，candidate_index 为候选序号。"""
     original = (candidate / evidence["source_path"]).resolve()
@@ -86,6 +116,8 @@ def merge_libraries(
         book_id = book.get("id")
         if not isinstance(book_id, str) or not book_id:
             raise ValueError(f"INVALID_CANDIDATE: 书籍 ID 无效: {candidate}")
+        if release_status == "accepted_candidate":
+            _validate_acceptance_marker(manifest, book, candidate)
         if book_id in seen_books:
             raise ValueError(f"DUPLICATE: 书籍 ID 重复: {book_id}")
         seen_books.add(book_id)
@@ -121,8 +153,17 @@ def merge_libraries(
             "source_root": source_root,
         })
 
+    lock_path = destination.parent / f".{destination.name}.merge.lock"
+    lock_held = False
     temporary = None
     try:
+        try:
+            lock_path.mkdir()
+        except FileExistsError as exc:
+            raise ValueError(f"MERGE_BUSY: 目标正在被另一个合并任务处理: {destination}") from exc
+        lock_held = True
+        if destination.exists() or destination.is_symlink():
+            raise ValueError("DESTINATION_EXISTS: 目标目录已存在")
         temporary = Path(tempfile.mkdtemp(prefix=".merge-", dir=destination.parent))
         (temporary / "cards").mkdir()
         (temporary / "evidence").mkdir()
@@ -171,6 +212,9 @@ def merge_libraries(
         write_json(temporary / "manifest.json", manifest)
         write_json(temporary / "relations.json", {"schema_version": 1, "edges": edges})
         report = validate_library(temporary)
+        # 锁只串行化遵守本约定的 merge 调用；最终再检查目标，拒绝锁持有期间出现的目标。
+        if destination.exists() or destination.is_symlink():
+            raise ValueError("DESTINATION_EXISTS: 目标目录已存在")
         os.replace(temporary, destination)
         temporary = None
         return {
@@ -187,3 +231,5 @@ def merge_libraries(
     finally:
         if temporary is not None and temporary.exists():
             shutil.rmtree(temporary)
+        if lock_held:
+            lock_path.rmdir()
