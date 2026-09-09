@@ -10,6 +10,27 @@ from src.distillation.jobs import write_json
 from src.knowledge.library import content_version, load_records, read_json, validate_library
 
 
+def _is_current_published_naval(candidate):
+    """判断候选是否为项目当前发布的 Naval 版本；candidate 为候选目录，返回是否通过路径与内容指纹校验。"""
+    library_root = Path(__file__).resolve().parents[2] / "data" / "library"
+    current_file = library_root / "CURRENT"
+    try:
+        current_version = current_file.read_text(encoding="utf-8").strip()
+    except (OSError, UnicodeError):
+        return False
+    if not re.fullmatch(r"[0-9a-f]{24}", current_version):
+        return False
+
+    published_version = (library_root / "versions" / current_version).resolve()
+    candidate = Path(candidate).resolve()
+    if not published_version.is_dir() or candidate != published_version:
+        return False
+    try:
+        return content_version(candidate) == current_version
+    except (OSError, TypeError, ValueError):
+        return False
+
+
 def _validate_acceptance_marker(manifest, book, candidate):
     """验证 accepted_candidate 的输入门禁；manifest 为候选清单，book 为唯一书籍，candidate 为候选目录。"""
     if manifest.get("is_example") is True:
@@ -28,14 +49,9 @@ def _validate_acceptance_marker(manifest, book, candidate):
     if any(marker in accepted_statuses for marker in markers):
         return
 
-    # 兼容当前已发布 Naval 的历史 assemble manifest：它没有顶层 release_status，
-    # 但固定的库/书籍标识和 agent_reviewed_pilot 状态是可审计的旧接受标记。
-    if (
-        manifest.get("library_id") == "library.naval-almanack-pilot"
-        and book.get("id") == "book.naval-almanack"
-        and book.get("author_id") == "author.naval-ravikant"
-        and book.get("status") == "agent_reviewed_pilot"
-    ):
+    # 兼容当前已发布 Naval 的历史 assemble manifest：例外绑定项目 CURRENT
+    # 指向的版本目录及其内容指纹，不信任候选自身可伪造的 manifest 字段。
+    if _is_current_published_naval(candidate):
         return
     raise ValueError(f"ACCEPTANCE_REQUIRED: 候选缺少 accepted_candidate 或 accepted 标记: {candidate}")
 

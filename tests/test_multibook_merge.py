@@ -176,12 +176,34 @@ class MultiBookMergeTests(unittest.TestCase):
 
     def test_current_naval_pilot_agent_reviewed_status_is_accepted_compatibility(self):
         """当前已发布 Naval 的 agent_reviewed_pilot 形态可向后兼容接受。"""
-        naval = Path(__file__).parents[1] / "data/library/versions/138e911ba4d4581b71d1c09c/"
+        library_root = Path(__file__).parents[1] / "data" / "library"
+        current_version = (library_root / "CURRENT").read_text(encoding="utf-8").strip()
+        naval = library_root / "versions" / current_version
         if not naval.is_dir():
             self.skipTest("当前本地 Naval 已发布候选不存在")
         result = merge_libraries([naval], self.destination, "library.naval-compatibility-test", "accepted_candidate")
         self.assertEqual(result["books"], 1)
         self.assertEqual(result["release_status"], "accepted_candidate")
+
+    def test_tampered_copy_of_current_naval_is_not_accepted(self):
+        """只篡改当前 Naval 副本的一张卡片也必须拒绝升格且不创建目标。"""
+        library_root = Path(__file__).parents[1] / "data" / "library"
+        current_version = (library_root / "CURRENT").read_text(encoding="utf-8").strip()
+        naval = library_root / "versions" / current_version
+        if not naval.is_dir():
+            self.skipTest("当前本地 Naval 已发布候选不存在")
+
+        tampered = Path(self.temp.name) / "tampered-naval"
+        shutil.copytree(naval, tampered)
+        card_path = sorted((tampered / "cards").glob("*.json"))[0]
+        card = json.loads(card_path.read_text(encoding="utf-8"))
+        self.assertIsInstance(card["statement"], str)
+        card["statement"] += "（回归测试篡改）"
+        card_path.write_text(json.dumps(card, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+        with self.assertRaisesRegex(ValueError, "ACCEPTANCE_REQUIRED"):
+            merge_libraries([tampered], self.destination, "library.naval-tampered-test", "accepted_candidate")
+        self.assertFalse(self.destination.exists())
 
     def test_merge_lock_rejects_competing_call_without_touching_destination(self):
         """同一目标的已有合并锁应拒绝竞争调用并保留锁与目标状态。"""
