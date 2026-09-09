@@ -1,0 +1,15 @@
+/* 3D保持固定展示区；灯光来自真实场景，浅色纸绿背景与现有登录一致。 */
+.mascot-figure { margin: 18px 0 0; max-width: 490px; width: 100%; }
+.mascot-stage { position: relative; width: 100%; height: clamp(300px, 38vw, 420px); border-radius: 6px 16px 6px 14px; overflow: hidden; background: #f2ecdc; border: 1px solid var(--border-soft); box-shadow: 0 3px 14px rgba(90, 76, 52, .13); transform: rotate(-.6deg); touch-action: pan-y; user-select: none; }
+.mascot-stage:focus-visible { outline: 3px solid var(--focus); outline-offset: 4px; }
+.mascot-poster { display: block; width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+.mascot-poster-hidden { visibility: hidden; }
+.mascot-canvas { position: absolute; inset: 0; cursor: grab; }
+.mascot-stage:active .mascot-canvas { cursor: grabbing; }
+.mascot-figure figcaption { margin-top: 10px; font-size: 12px; color: var(--text-secondary); line-height: 1.7; }
+.mascot-state { position: absolute; bottom: 12px; left: 16px; right: 16px; font-size: 12px; color: #304338; background: #f4f6f2e8; padding: 8px 12px; border-radius: 8px; }
+.mascot-controls { display: flex; flex-wrap: wrap; gap: 8px; padding: 9px 0 0; }
+.mascot-controls button { background: transparent; color: var(--accent); border: 1px solid var(--border); padding: 8px 12px; font-size: 12px; min-height: 44px; }
+@media (max-width: 767px) { .mascot-figure { max-width: 100%; } .mascot-stage { height: 230px; } .mascot-controls { padding-top: 6px; } }
+@media (min-width: 768px) and (max-height: 780px) { .mascot-stage { height: 300px; } }
+@media (prefers-color-scheme: dark) { .mascot-stage { background: #24392d; } }

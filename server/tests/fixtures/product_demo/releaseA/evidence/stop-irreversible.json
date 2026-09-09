@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "id": "evidence.product-a.stop-irreversible",
+  "book_id": "book.product-a.boundaries",
+  "chapter": "正文",
+  "source_path": "sources/stop-irreversible.md",
+  "source_sha256": "296643fbfdc958ddf5df4365b92bdf7998e7e5501c5dd1b3d33375544e000e92",
+  "start": 39,
+  "end": 159,
+  "text": "行动能够带来反馈，但不是每次试行都值得开始。若一个动作可能覆盖唯一副本、造成不可逆损失，或者损失上限尚不清楚，应停止试行，先确认备份与可恢复范围。不能把动作很小或耗时很短当作风险很低的证据。只有确认能够撤回并能封顶损失，才重新讨论是否试行。"
+}

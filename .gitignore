@@ -30,3 +30,12 @@ dist/*
 
 # 本地真实书籍生成的作者参考资产
 skills/naval-almanack/
+
+# Web 产品开发隔离环境与私有运行数据
+.venv-product/
+.runtime/
+web/node_modules/
+tools/api-types/node_modules/
+web/dist/
+web/test-results/
+web/playwright-report/

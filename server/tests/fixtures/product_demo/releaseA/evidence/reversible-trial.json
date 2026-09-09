@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "id": "evidence.product-a.reversible-trial",
+  "book_id": "book.product-a.trials",
+  "chapter": "正文",
+  "source_path": "sources/reversible-trial.md",
+  "source_sha256": "2151e20397c8815051fe9133ce56f986a0010a2625c5a1ae7f61cad9387811d2",
+  "start": 37,
+  "end": 150,
+  "text": "当任务迟迟没有开始，且试行能够撤回、损失可以事先封顶时，可先做一次短时试行。写清要验证的疑问，保留原有材料，再执行一个可检查的动作。试行结束后比较结果与疑问，决定继续还是撤回。涉及不可逆后果的步骤不在这套启动方法的适用范围内。"
+}

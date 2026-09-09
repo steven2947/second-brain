@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "library_id": "library.product-demo.releaseB",
+  "is_example": true,
+  "books": [
+    {
+      "id": "book.product-b.labels",
+      "title": "静物标签札记（自编测试材料）",
+      "author_id": "author.product-b.label-writer",
+      "author": "自编测试材料",
+      "status": "example_only"
+    }
+  ],
+  "cards_directory": "cards",
+  "evidence_directory": "evidence",
+  "relations_file": "relations.json"
+}

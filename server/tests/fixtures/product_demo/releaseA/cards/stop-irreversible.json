@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "id": "knowledge.product-a.stop-irreversible",
+  "book_id": "book.product-a.boundaries",
+  "author_id": "author.product-a.boundary-writer",
+  "kind": "principle",
+  "title": "先停下来的边界札记",
+  "statement": "试行可能造成不可逆损失或损失上限不明时，应停止启动，先确认备份与可恢复范围。",
+  "conditions": [
+    "准备试行，但动作可能覆盖唯一副本",
+    "损失上限尚不清楚或可能不可逆"
+  ],
+  "boundaries": [
+    "确认可撤回且损失可封顶后，应重新评估试行，不要求无限等待。"
+  ],
+  "keywords": [
+    "琥珀试行",
+    "不可逆",
+    "停止",
+    "边界"
+  ],
+  "evidence_ids": [
+    "evidence.product-a.stop-irreversible"
+  ]
+}

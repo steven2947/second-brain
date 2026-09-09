@@ -1,0 +1,22 @@
+/* 隐私操作分级呈现，危险操作先说明后确认；不让退出和数据删除挤在同一按钮组。 */
+.privacy-main { max-width: 980px; }
+.privacy-tabs { display: flex; flex-wrap: wrap; gap: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem; margin-bottom: 2rem; }
+.privacy-tabs a[aria-current="page"] { color: var(--accent); font-weight: 700; }
+.privacy-panel { padding: clamp(1.2rem, 3vw, 2rem); border: 1px solid var(--border); border-radius: 1rem; background: var(--surface-raised); margin-bottom: 1.5rem; min-width: 0; }
+.privacy-panel h2 { font-size: 1.4rem; margin-top: 0; }
+.privacy-panel p, .privacy-delete-problem p { line-height: 1.8; color: var(--text-secondary); }
+.privacy-form { display: grid; gap: 1rem; max-width: 580px; margin-top: 1.5rem; }
+.privacy-form label { display: grid; gap: .6rem; }
+.privacy-form input:not([type="checkbox"]), .privacy-form select { width: 100%; min-height: 44px; font: inherit; color: var(--text-primary); background: var(--surface); border: 1px solid var(--border); border-radius: .5rem; padding: .7rem; }
+.privacy-history { margin-top: 2rem; border-top: 1px solid var(--border); padding-top: 1.2rem; }
+.privacy-row { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: space-between; }
+.privacy-records { list-style: none; margin: 0; padding: 0; }
+.privacy-records li { padding: 1.2rem 0; border-bottom: 1px solid var(--border); }
+.privacy-records li p { font-size: .85rem; margin-bottom: .4rem; }
+.privacy-records strong { overflow-wrap: anywhere; }
+.privacy-danger summary, .privacy-delete-problem summary { cursor: pointer; padding: .8rem 0; color: #8c432e; font-weight: 600; }
+.privacy-disclosure { border-left: 3px solid var(--border); padding-left: 1rem; }
+.privacy-form .privacy-check, .privacy-check { display: flex; align-items: start; gap: .7rem; line-height: 1.7; margin-block: 1rem; }
+.privacy-check input { margin-top: .3rem; width: 18px; height: 18px; accent-color: var(--accent); flex-shrink: 0; }
+.privacy-delete-problem { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+@media (max-width: 640px) { .privacy-records .privacy-row { align-items: start; flex-direction: column; } }

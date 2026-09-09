@@ -1,0 +1,51 @@
+/* 正式答案：一张「书房输出页」。建议卡、行动清单、知识便笺、来源簿，全部可回溯。 */
+.answer-reader { position: relative; margin: 36px 0 32px; padding: clamp(22px, 4vw, 46px); border: 1px solid var(--border-soft); border-radius: 6px 18px 6px 16px; background: #fff; box-shadow: 0 3px 16px rgba(90, 76, 52, .12); line-height: 1.9; overflow-wrap: anywhere; }
+.answer-reader::before { content: ""; position: absolute; top: -13px; left: 50%; width: 132px; height: 27px; background: var(--tape-dots) center / cover; opacity: .85; transform: translateX(-50%) rotate(-2.2deg); pointer-events: none; }
+.answer-reader p, .answer-reader li, .answer-reader dd, .answer-reader blockquote { white-space: pre-wrap; }
+.answer-reader > section { padding-top: 30px; margin-top: 30px; border-top: 1.5px dashed var(--border); }
+.answer-reader h2 { font-family: var(--font-serif); font-size: 30px; margin: 8px 0 20px; }
+.answer-reader h3 { font-family: var(--font-serif); font-size: 23px; margin: 0 0 20px; }
+.answer-reader h3::before { content: "✦ "; color: var(--seal); }
+.answer-reader h4 { font-size: 17px; margin: 16px 0 8px; font-weight: 600; }
+.answer-reader h5 { font-size: 14px; margin: 18px 0 6px; color: var(--ink-soft); letter-spacing: .08em; }
+.answer-reader p { margin: 10px 0; }
+.answer-header { position: relative; }
+.answer-header .stamp-seal { position: absolute; top: -6px; right: 0; }
+.answer-reader .answer-conclusion { font-family: var(--font-serif); font-size: clamp(21px, 3vw, 26px); line-height: 1.85; }
+.answer-reader ul { padding-left: 24px; }
+.answer-reader li + li { margin-top: 8px; }
+.answer-reader details { margin-top: 20px; padding: 16px 0; border-top: 1.5px dashed var(--border-soft); }
+.answer-reader details summary, .answer-reader summary { color: var(--accent-deep); cursor: pointer; min-height: 30px; }
+.answer-reader details summary::marker, .answer-reader summary::marker { color: var(--seal); }
+.answer-reader dl { display: grid; grid-template-columns: 5em minmax(0, 1fr); gap: 8px 16px; }
+.answer-reader dt { color: var(--ink-soft); font-size: 14px; }
+.answer-reader dd { margin: 0; }
+/* 行动清单：一张张可勾选的小任务条 */
+.answer-actions { list-style: none; padding: 0 !important; counter-reset: action; display: grid; gap: 14px; }
+.answer-actions > li { position: relative; counter-increment: action; padding: 16px 18px 14px 56px; background: var(--paper-warm); border: 1px solid var(--border-soft); border-radius: 4px 12px 5px 10px; }
+.answer-actions > li::before { content: counter(action); position: absolute; left: 14px; top: 16px; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-family: var(--font-serif); font-weight: 700; color: var(--on-accent); background: var(--accent); border-radius: 50%; box-shadow: 1.5px 2px 0 rgba(58, 86, 65, .3); }
+.answer-actions > li h4 { margin: 0 0 8px; font-size: 16.5px; }
+.answer-actions > li dl { grid-template-columns: 4.5em minmax(0, 1fr); gap: 4px 12px; font-size: 14.5px; }
+.answer-actions > li dt { color: var(--seal); font-family: var(--font-script); font-size: 13.5px; }
+.answer-books { list-style: none; padding: 0 !important; }
+.answer-books li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; padding: 12px 0; border-bottom: 1.5px dashed var(--border-soft); }
+.answer-books li:last-child { border-bottom: 0; }
+.answer-books strong { font-family: var(--font-serif); font-size: 15.5px; }
+.answer-books span, .answer-tag { color: var(--ink-soft); font-size: 13px; }
+/* 知识便笺：每张采用卡是一张贴在手帐上的小卡 */
+.answer-witness { position: relative; margin: 26px 0; padding: clamp(16px, 3vw, 28px); border: 1px solid var(--border-soft); border-left: 4px solid var(--accent); border-radius: 4px 14px 5px 12px; background: var(--paper-warm); box-shadow: 0 2px 8px rgba(90, 76, 52, .08); }
+.answer-witness::after { content: ""; position: absolute; top: -10px; right: 26px; width: 84px; height: 19px; background: var(--tape-stripe) center / cover; opacity: .75; transform: rotate(2.6deg); border-radius: 2px; pointer-events: none; }
+.answer-witness > h4 { font-family: var(--font-serif); font-size: 20px; }
+.answer-card-links { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 16px; font-size: 13px; }
+.answer-card-links a { color: var(--accent-deep); text-underline-offset: 4px; }
+.answer-card-id { color: var(--ink-soft); }
+.answer-seats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin: 20px 0; }
+.answer-seat, .answer-inset { background: var(--paper-warm); border: 1px solid var(--border-soft); border-radius: 4px 12px 5px 10px; padding: 18px; margin-top: 16px; }
+.answer-reader .answer-actions > li, .answer-reader .answer-witness { background: var(--paper-warm); }
+.answer-seat h4, .answer-inset h4 { margin-top: 0; }
+.answer-source + .answer-source { border-top: 1.5px dashed var(--border-soft); margin-top: 20px; padding-top: 16px; }
+.answer-reader blockquote { margin: 16px 0; padding: 12px 18px; border-left: 3px solid var(--seal-soft); background: rgba(191, 90, 69, .045); color: var(--ink); font-family: var(--font-serif); }
+.answer-gap { padding: 12px 16px; border: 1.5px dashed var(--border); border-radius: 6px; color: var(--ink-soft); }
+.answer-next-prompt { border-left: 3px solid var(--accent); padding: 14px 20px; background: var(--paper-warm); font-family: var(--font-serif); }
+.answer-continuation button { white-space: normal; margin-top: 12px; }
+@media (max-width: 600px) { .answer-seats { grid-template-columns: 1fr; } .answer-reader dl { grid-template-columns: 1fr; gap: 4px; } .answer-reader dd { margin-bottom: 10px; } .answer-card-id { display: none; } .answer-actions > li { padding-left: 48px; } .answer-header .stamp-seal { position: static; margin-top: 10px; } }

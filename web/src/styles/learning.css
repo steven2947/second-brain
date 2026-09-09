@@ -1,0 +1,23 @@
+/* 学习室沿用图书馆色板与字体；正文不裁切，窄屏来源置于正文之前。 */
+.learning-main { max-width: 1280px; }
+.learning-link { display: inline-flex; width: fit-content; margin-block: 1rem; text-decoration: none; }
+.learning-toolbar { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; margin-block: 1rem; }
+.learning-main label { display: grid; gap: .55rem; }
+.learning-main select, .learning-main textarea, .learning-main input:not([type=checkbox]) { width: 100%; font: inherit; padding: .8rem; color: inherit; border: 1px solid var(--border); border-radius: .6rem; background: var(--surface); }
+.learning-main textarea { resize: vertical; line-height: 1.75; min-height: 8rem; }
+.learning-session-list, .learning-card-options { list-style: none; padding: 0; }
+.learning-session-list { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 1.4rem; }
+.learning-session-list > li, .learning-plan, .learning-sources, .learning-turn, .learning-welcome, .learning-composer { border: 1px solid var(--border); border-radius: 1rem; padding: clamp(1.2rem,2.8vw,2rem); background: var(--surface); }
+.learning-session-list p, .learning-prose { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.95; }
+.learning-create-grid { display: grid; grid-template-columns: minmax(0,1.3fr) minmax(280px,.8fr); gap: 2rem; align-items: start; }
+.learning-search { display: flex; gap: .7rem; align-items: end; margin-block: 1.2rem; }.learning-search label { flex: 1; }
+.learning-card-options li { border-bottom: 1px solid var(--border); padding-block: 1.2rem; }
+.learning-card-options label { grid-template-columns: 1.1rem minmax(0,1fr); gap: .9rem; cursor: pointer; }.learning-card-options input { margin-top: .4rem; accent-color: var(--accent); }
+.learning-card-options strong, .learning-card-options small, .learning-card-options span > span { display: block; margin-bottom: .6rem; line-height: 1.6; overflow-wrap: anywhere; }
+.learning-card-options small { color: var(--text-secondary); }.learning-plan { position: sticky; top: 1.5rem; }.learning-plan ul { padding-left: 1.2rem; }.learning-plan li { margin-bottom: .7rem; }.learning-plan li button { margin-left: .6rem; }.learning-plan > button { margin-top: 1rem; }
+.learning-room-grid { display: grid; grid-template-columns: minmax(240px,.65fr) minmax(0,1.65fr); gap: 2rem; align-items: start; }
+.learning-sources { position: sticky; top: 1rem; }.learning-sources h2 { font-size: 1.25rem; }.learning-sources details { border-top: 1px solid var(--border); padding-block: 1rem; }.learning-sources summary { cursor: pointer; font-weight: 600; line-height: 1.6; }.learning-sources p { line-height: 1.7; overflow-wrap: anywhere; }
+.learning-dialogue { min-width: 0; }.learning-turn, .learning-welcome { margin-bottom: 1.3rem; }.learning-turn-user_request, .learning-turn-user_response { background: var(--surface-raised); border-left: 3px solid var(--accent); }
+.learning-turn h3 { font-size: 1.15rem; margin: 1.6rem 0 .65rem; }.learning-citations { padding-left: 1.1rem; font-size: .85rem; line-height: 1.8; }.learning-citations a { text-decoration-thickness: 1px; text-underline-offset: .2rem; }
+.learning-job { padding: 1rem; border-left: 3px solid var(--accent); }.learning-error { color: var(--text-primary); border-left: 3px solid var(--accent); padding-left: 1rem; line-height: 1.7; }.learning-composer { margin-top: 2rem; }.learning-composer label { margin-block: 1rem; }.learning-composer > p { line-height: 1.7; }
+@media (max-width: 800px) { .learning-create-grid, .learning-room-grid, .learning-session-list { grid-template-columns: minmax(0,1fr); }.learning-plan, .learning-sources { position: static; }.learning-room-grid { gap: 1.1rem; }.learning-sources { padding: 1rem; }.learning-search { flex-wrap: wrap; } }

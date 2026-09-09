@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "id": "knowledge.product-b.shelf-label",
+  "book_id": "book.product-b.labels",
+  "author_id": "author.product-b.label-writer",
+  "kind": "method",
+  "title": "静物标签札记",
+  "statement": "为架上物件分配唯一短码，并在移动后同步更新清单中的固定格位。",
+  "conditions": [
+    "物件按固定格位存放"
+  ],
+  "boundaries": [
+    "多人共用格位时需要先约定更新责任。"
+  ],
+  "steps": [
+    "分配唯一短码",
+    "把短码和格位登记在清单",
+    "移动后更新格位"
+  ],
+  "keywords": [
+    "靛蓝格位",
+    "标签",
+    "短码"
+  ],
+  "evidence_ids": [
+    "evidence.product-b.shelf-label"
+  ]
+}

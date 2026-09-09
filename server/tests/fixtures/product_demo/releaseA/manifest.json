@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "library_id": "library.product-demo.releaseA",
+  "is_example": true,
+  "books": [
+    {
+      "id": "book.product-a.trials",
+      "title": "可撤回试行札记（自编测试材料）",
+      "author_id": "author.product-a.trial-writer",
+      "author": "自编测试材料",
+      "status": "example_only"
+    },
+    {
+      "id": "book.product-a.boundaries",
+      "title": "先停下来的边界札记（自编测试材料）",
+      "author_id": "author.product-a.boundary-writer",
+      "author": "自编测试材料",
+      "status": "example_only"
+    }
+  ],
+  "cards_directory": "cards",
+  "evidence_directory": "evidence",
+  "relations_file": "relations.json"
+}

@@ -1,0 +1,119 @@
+{
+  "schema_version": 1,
+  "problem_id": "problem.40000000000040008000000000000005",
+  "question": "整理旧文件时，怎样决定是否开始一次琥珀试行？",
+  "goal": "analyze",
+  "clarification_limit": 5,
+  "events": [
+    {
+      "type": "ask",
+      "question": "这次试行希望先弄清什么？",
+      "reason": "回答会改变试行方法及停止边界的适用判断。"
+    },
+    {
+      "type": "user_update",
+      "source_message": "我想先弄清旧文件能不能整理成方便查找的清单。",
+      "intent": "answer",
+      "changes": {
+        "desired_outcome": "弄清旧文件能否整理成方便查找的清单",
+        "facts": [
+          "准备整理旧文件"
+        ]
+      },
+      "reason": "保留自编用户原答，仅按明确陈述整理事实与约束。"
+    },
+    {
+      "type": "ask",
+      "question": "试行可以撤回吗，现有材料保留在哪里？",
+      "reason": "回答会改变试行方法及停止边界的适用判断。"
+    },
+    {
+      "type": "user_update",
+      "source_message": "我会在复制出来的文件夹里做，原文件夹保留不动。",
+      "intent": "answer",
+      "changes": {
+        "facts": [
+          "准备整理旧文件",
+          "在复制出来的文件夹内试行",
+          "原文件夹保留不动"
+        ]
+      },
+      "reason": "保留自编用户原答，仅按明确陈述整理事实与约束。"
+    },
+    {
+      "type": "ask",
+      "question": "你能接受多大的时间和材料损失？",
+      "reason": "回答会改变试行方法及停止边界的适用判断。"
+    },
+    {
+      "type": "user_update",
+      "source_message": "这次最多用二十分钟，不能丢原文件。",
+      "intent": "answer",
+      "changes": {
+        "constraints": [
+          "最多用二十分钟",
+          "不能丢原文件"
+        ]
+      },
+      "reason": "保留自编用户原答，仅按明确陈述整理事实与约束。"
+    },
+    {
+      "type": "ask",
+      "question": "复制文件夹是否已经核对完整，是否存在唯一副本？",
+      "reason": "回答会改变试行方法及停止边界的适用判断。"
+    },
+    {
+      "type": "user_update",
+      "source_message": "我只确认复制过程结束了，还没有逐个核对；原文件夹是目前唯一核对过的副本。",
+      "intent": "answer",
+      "changes": {
+        "facts": [
+          "准备整理旧文件",
+          "复制过程已结束但未逐个核对",
+          "原文件夹是目前唯一核对过的副本"
+        ],
+        "unknowns": [
+          "复制文件夹是否完整"
+        ]
+      },
+      "reason": "保留自编用户原答，仅按明确陈述整理事实与约束。"
+    },
+    {
+      "type": "ask",
+      "question": "拟执行的动作会覆盖或删除原文件夹吗？",
+      "reason": "回答会改变试行方法及停止边界的适用判断。"
+    },
+    {
+      "type": "user_update",
+      "source_message": "脚本默认路径还是原文件夹。我现在先不运行，改成复制目录并核对路径后再试。",
+      "intent": "answer",
+      "changes": {
+        "facts": [
+          "复制过程已结束但未逐个核对",
+          "原文件夹是目前唯一核对过的副本",
+          "脚本默认路径仍指向原文件夹",
+          "尚未运行脚本"
+        ],
+        "constraints": [
+          "最多用二十分钟",
+          "不能丢原文件",
+          "核对路径指向复制目录后才能试行"
+        ],
+        "unknowns": [
+          "复制文件夹是否完整"
+        ]
+      },
+      "reason": "保留自编用户原答，仅按明确陈述整理事实与约束。"
+    },
+    {
+      "type": "prepare",
+      "retrieval_focus": "琥珀试行 不可逆损失 唯一副本 停止边界",
+      "query_expansions": [
+        "可逆试行方法",
+        "不可逆损失停止原则"
+      ],
+      "reason": "已到档案澄清上限，根据已知事实检索方法及限制条件；未知项保持未知。"
+    }
+  ],
+  "state_hash": "e2f9eff1ddc146de7d13e7593ff5b1aea12585b8f104f892ac2427cd598f8797"
+}

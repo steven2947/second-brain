@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "problem_id": "problem.40000000000040008000000000000003",
+  "question": "整理旧文件时，怎样决定是否开始一次琥珀试行？",
+  "goal": "analyze",
+  "events": [
+    {
+      "type": "ask",
+      "question": "这次试行希望先弄清什么？",
+      "reason": "回答会改变试行方法及停止边界的适用判断。"
+    },
+    {
+      "type": "user_update",
+      "source_message": "我想先弄清旧文件能不能整理成方便查找的清单。",
+      "intent": "answer",
+      "changes": {
+        "desired_outcome": "弄清旧文件能否整理成方便查找的清单",
+        "facts": [
+          "准备整理旧文件"
+        ]
+      },
+      "reason": "保留自编用户原答，仅按明确陈述整理事实与约束。"
+    },
+    {
+      "type": "ask",
+      "question": "试行可以撤回吗，现有材料保留在哪里？",
+      "reason": "回答会改变试行方法及停止边界的适用判断。"
+    },
+    {
+      "type": "user_update",
+      "source_message": "我会在复制出来的文件夹里做，原文件夹保留不动。",
+      "intent": "answer",
+      "changes": {
+        "facts": [
+          "准备整理旧文件",
+          "在复制出来的文件夹内试行",
+          "原文件夹保留不动"
+        ]
+      },
+      "reason": "保留自编用户原答，仅按明确陈述整理事实与约束。"
+    },
+    {
+      "type": "ask",
+      "question": "你能接受多大的时间和材料损失？",
+      "reason": "回答会改变试行方法及停止边界的适用判断。"
+    },
+    {
+      "type": "user_update",
+      "source_message": "这次最多用二十分钟，不能丢原文件。",
+      "intent": "answer",
+      "changes": {
+        "constraints": [
+          "最多用二十分钟",
+          "不能丢原文件"
+        ]
+      },
+      "reason": "保留自编用户原答，仅按明确陈述整理事实与约束。"
+    },
+    {
+      "type": "prepare",
+      "retrieval_focus": "琥珀试行 可撤回 损失封顶 原文件保留",
+      "query_expansions": [
+        "可逆试行方法",
+        "不可逆损失停止原则"
+      ],
+      "reason": "已到档案澄清上限，根据已知事实检索方法及限制条件；未知项保持未知。"
+    }
+  ],
+  "state_hash": "b605b6aecf41722de8d68f4d3b217311d8e68c2fb68c828e1605774085fbec64"
+}

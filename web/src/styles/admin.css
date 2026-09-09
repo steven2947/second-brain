@@ -1,0 +1,12 @@
+/* 后台保持克制的图书馆风格，身份信息与权限一览清晰，不依赖隐藏按钮做鉴权。 */
+.admin-main { flex: 1; padding: 3rem 0 5rem; width: 100%; }
+.admin-login-panel { max-width: 520px; margin: auto; padding: clamp(1.5rem,4vw,2.5rem); background: var(--surface-raised); border: 1px solid var(--border); border-radius: 1rem; }
+.admin-login-panel h1 { font-size: clamp(1.6rem,3vw,2.2rem); }.admin-login-panel p, .admin-panel > p { line-height: 1.8; color: var(--text-secondary); }
+.admin-form { display: grid; gap: 1rem; margin-top: 1.5rem; }.admin-form label { display: grid; gap: .6rem; font-size: .95rem; }
+.admin-form input, .admin-form select { width: 100%; font: inherit; min-height: 46px; padding: .7rem; border: 1px solid var(--border); border-radius: .5rem; color: var(--text-primary); background: var(--surface); }
+.admin-note { margin-top: 1.8rem; padding-top: 1.3rem; border-top: 1px solid var(--border); color: var(--text-secondary); font-size: .85rem; line-height: 1.8; }
+.admin-heading { display: flex; gap: 1rem; justify-content: space-between; align-items: center; padding-bottom: 2rem; }.admin-heading h1 { font-size: 2rem; }.admin-heading p { overflow-wrap: anywhere; }
+.admin-work-grid { display: grid; grid-template-columns: 1.15fr 1fr; gap: 1.5rem; align-items: start; }.admin-panel { padding: clamp(1.3rem,3vw,2rem); border: 1px solid var(--border); background: var(--surface-raised); border-radius: 1rem; min-width: 0; }.admin-panel h2 { margin-top: 0; font-size: 1.25rem; }
+.admin-permissions { list-style: none; padding: 0; margin-block: 1.5rem; }.admin-permissions li { display: flex; flex-wrap: wrap; gap: .55rem; align-items: center; padding-block: .7rem; border-bottom: 1px solid var(--border); }.admin-permissions svg { color: var(--accent); flex-shrink: 0; }.admin-permissions code { color: var(--text-secondary); font-size: .75rem; margin-left: auto; }
+.admin-session { font-size: .85rem; line-height: 1.7; }.admin-session dt { color: var(--text-secondary); }.admin-session dd { margin: .25rem 0 .85rem; }
+@media (max-width: 800px) { .admin-work-grid { grid-template-columns: minmax(0,1fr); }.admin-heading { flex-wrap: wrap; }.admin-main { padding-top: 1.5rem; }.admin-permissions code { margin-left: 1.6rem; } }

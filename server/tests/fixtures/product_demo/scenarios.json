@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "is_example": true,
+  "scope": "仅自编场景的机械检索预期；不替代原五类真实回答评审或用户授权测试。",
+  "retrieval_cases": [
+    {
+      "id": "no-coverage",
+      "release": "releaseA",
+      "request": {
+        "schema_version": 1,
+        "question": "zxqv917plutonflux",
+        "goal": "analyze",
+        "facts": [],
+        "constraints": [],
+        "assumptions": [],
+        "query_expansions": []
+      },
+      "expected_card_ids": [],
+      "expected_status": "no_relevant_knowledge"
+    },
+    {
+      "id": "no-coverage-b",
+      "release": "releaseB",
+      "request": {
+        "schema_version": 1,
+        "question": "zxqv917plutonflux",
+        "goal": "analyze",
+        "facts": [],
+        "constraints": [],
+        "assumptions": [],
+        "query_expansions": []
+      },
+      "expected_card_ids": [],
+      "expected_status": "no_relevant_knowledge"
+    },
+    {
+      "id": "counter-perspective",
+      "release": "releaseA",
+      "request": {
+        "schema_version": 1,
+        "question": "琥珀试行：任务启动前，怎样判断可逆试行与不可逆损失边界？",
+        "goal": "analyze",
+        "facts": [],
+        "constraints": [],
+        "assumptions": [],
+        "query_expansions": []
+      },
+      "expected_card_ids": [
+        "knowledge.product-a.reversible-trial",
+        "knowledge.product-a.stop-irreversible"
+      ],
+      "expected_status": "ready"
+    },
+    {
+      "id": "independent-b-marker",
+      "release": "releaseB",
+      "request": {
+        "schema_version": 1,
+        "question": "靛蓝格位",
+        "goal": "analyze",
+        "facts": [],
+        "constraints": [],
+        "assumptions": [],
+        "query_expansions": []
+      },
+      "expected_card_ids": [
+        "knowledge.product-b.shelf-label"
+      ],
+      "expected_status": "ready"
+    },
+    {
+      "id": "b-marker-absent-from-a",
+      "release": "releaseA",
+      "request": {
+        "schema_version": 1,
+        "question": "靛蓝格位",
+        "goal": "analyze",
+        "facts": [],
+        "constraints": [],
+        "assumptions": [],
+        "query_expansions": []
+      },
+      "expected_card_ids": [],
+      "expected_status": "no_relevant_knowledge"
+    },
+    {
+      "id": "a-marker-absent-from-b",
+      "release": "releaseB",
+      "request": {
+        "schema_version": 1,
+        "question": "琥珀试行",
+        "goal": "analyze",
+        "facts": [],
+        "constraints": [],
+        "assumptions": [],
+        "query_expansions": []
+      },
+      "expected_card_ids": [],
+      "expected_status": "no_relevant_knowledge"
+    }
+  ]
+}

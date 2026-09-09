@@ -1,0 +1,168 @@
+/* 第二大脑 · 手帐书房主题：奶油纸底、墨绿正文、朱砂印章；本文件是全部页面的语义令牌与公共装饰。 */
+:root {
+  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  color-scheme: light;
+  /* 纸与墨 */
+  --paper: #f0e7d6;
+  --paper-deep: #e7dcc6;
+  --sheet: #fffdf7;
+  --paper-card: #ffffff;
+  --paper-warm: #faf4e8;
+  --ink: #3c3529;
+  --ink-soft: #8b7e6b;
+  --ink-faint: #b7a98f;
+  /* 主题色：墨绿为主，朱砂作印章与强调 */
+  --accent: #47684f;
+  --accent-deep: #3a5641;
+  --on-accent: #fdfaf2;
+  --seal: #bf5a45;
+  --seal-soft: #e8c4b8;
+  --highlight: #f3dd9f;
+  --border: #ddd0b8;
+  --border-soft: #e8ddc8;
+  --focus: #47684f;
+  /* 字体：楷体标题、行楷点缀 */
+  --font-serif: "Kaiti SC", "STKaiti", "KaiTi", "Noto Serif SC", "Songti SC", serif;
+  --font-script: "Xingkai SC", "STXingkai", "Kaiti SC", "STKaiti", cursive;
+  --tape-dots: url("/journal/washi-dots.png");
+  --tape-stripe: url("/journal/washi-stripe.png");
+  /* 旧页面样式的兼容别名：全部指向新手帐色板 */
+  --surface: var(--paper);
+  --surface-raised: var(--card, #ffffff);
+  --sheet: var(--sheet, #fffdf7);
+  --text-primary: var(--ink);
+  --text-secondary: var(--ink-soft);
+  color: var(--ink);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+/* 纸纹铺满全站；纹理图缺失时退回纯色。 */
+body {
+  margin: 0;
+  min-width: 280px;
+  overflow-x: clip;
+  background-color: var(--paper);
+  /* 纸纹上叠一层奶白，把背景压淡，让白卡片成为主角 */
+  background-image: linear-gradient(rgba(248, 242, 230, .62), rgba(248, 242, 230, .62)), url("/journal/paper-texture.png");
+  background-size: auto, 512px;
+  background-attachment: fixed;
+}
+* { box-sizing: border-box; }
+::selection { background: var(--highlight); color: var(--ink); }
+button { font: inherit; cursor: pointer; }
+button:disabled { cursor: wait; opacity: .6; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+input, select, textarea { accent-color: var(--accent); }
+
+h1, h2, h3 { font-family: var(--font-serif); font-weight: 700; letter-spacing: .02em; }
+h1 { font-size: clamp(32px, 4.5vw, 50px); line-height: 1.4; margin: 18px 0; }
+h1, h2 { position: relative; }
+/* 荧光笔划线：标题关键字下的手账高亮 */
+h1::after, h2::after {
+  content: "";
+  position: absolute;
+  left: -2px; right: auto; bottom: 2px;
+  width: 2.6em; height: .34em;
+  background: var(--highlight);
+  opacity: .75;
+  border-radius: 2px;
+  transform: rotate(-.6deg);
+  pointer-events: none;
+}
+p { line-height: 1.9; }
+a { color: var(--accent-deep); }
+button, .problem-primary-link, .problem-actions button {
+  display: inline-flex; align-items: center; gap: 10px;
+  border: 0; border-radius: 12px; padding: 13px 22px; min-height: 46px;
+  color: var(--on-accent); background: var(--accent);
+  box-shadow: 2px 3px 0 rgba(71, 104, 79, .22);
+  white-space: nowrap; font-weight: 550;
+  transition: transform .08s ease, box-shadow .08s ease;
+}
+button:hover:not(:disabled), .problem-primary-link:hover { transform: translateY(-1px); box-shadow: 3px 4px 0 rgba(71, 104, 79, .26); }
+button:active { transform: translateY(1px); box-shadow: 1px 1px 0 rgba(71, 104, 79, .2); }
+.secondary-action { background: transparent; color: var(--accent-deep); border: 1.5px dashed var(--accent); box-shadow: none; }
+.secondary-action:hover:not(:disabled) { background: rgba(71, 104, 79, .07); box-shadow: none; transform: none; }
+.text-action { color: var(--accent-deep); background: transparent; padding: 8px 0; font-size: 13px; text-decoration: underline; text-underline-offset: 4px; box-shadow: none; }
+.section-label { font-family: var(--font-script); font-size: 17px; color: var(--seal); letter-spacing: .06em; }
+.reading-muted, .reading-muted p { color: var(--ink-soft); }
+
+/* —— 手帐公共装饰 —— */
+/* 和纸胶带：贴在卡片顶边的装饰条 */
+.journal-tape {
+  position: absolute; top: -13px; left: 50%;
+  width: 128px; height: 27px;
+  background: var(--tape-dots) center / cover;
+  opacity: .82;
+  transform: translateX(-50%) rotate(-2.4deg);
+  border-radius: 2px;
+  pointer-events: none;
+}
+.journal-tape.tape-right { left: auto; right: 9%; transform: rotate(3deg); }
+.journal-tape.tape-stripe { background-image: var(--tape-stripe); }
+/* 朱砂圆章：盖在答案与完成态上 */
+.stamp-seal {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 84px; height: 84px; padding: 8px;
+  border: 2.5px solid var(--seal);
+  border-radius: 50%;
+  color: var(--seal);
+  font-family: var(--font-serif);
+  font-size: 14px; line-height: 1.5; text-align: center; letter-spacing: .12em;
+  transform: rotate(-8deg);
+  opacity: .82;
+  mask-image: radial-gradient(circle at 30% 26%, transparent 2px, #000 2.6px),
+    radial-gradient(circle at 74% 62%, transparent 1.6px, #000 2.2px);
+  mask-composite: subtract;
+  -webkit-mask-composite: source-over;
+  pointer-events: none;
+  user-select: none;
+}
+/* 手写批注 */
+.hand-note { font-family: var(--font-script); color: var(--ink-soft); font-size: 15px; letter-spacing: .05em; }
+/* 便签卡：微转角+软阴影，像贴在手帐上的纸片 */
+.note-card {
+  position: relative;
+  background: var(--paper-card);
+  border: 1px solid var(--border-soft);
+  border-radius: 4px 14px 6px 12px;
+  box-shadow: 0 2px 10px rgba(90, 76, 52, .1), 0 1px 2px rgba(90, 76, 52, .08);
+}
+@media (prefers-reduced-motion: reduce) {
+  button, .problem-primary-link { transition: none; }
+  button:hover:not(:disabled), .problem-primary-link:hover { transform: none; }
+}
+
+/* —— 每页hero：白卡+胶带+该页专属姿势插画 —— */
+.page-hero { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 22px; padding: 26px 30px 24px; margin: 4px 0 26px; background: #fff; border: 1px solid var(--border-soft); border-radius: 4px 16px 6px 14px; box-shadow: 0 2px 10px rgba(90, 76, 52, .08); }
+.page-hero .journal-tape { width: 128px; height: 26px; top: -12px; }
+.page-hero-copy { min-width: 0; }
+.page-hero-copy h1 { font-size: clamp(27px, 3.2vw, 38px); margin: 10px 0 10px; }
+.page-hero-copy p { color: var(--ink-soft); font-size: 14.5px; line-height: 1.85; margin: 0; max-width: 36em; }
+.page-hero-action { margin-top: 16px; display: flex; gap: 12px; flex-wrap: wrap; }
+.page-hero-action .problem-primary-link { box-shadow: 2px 3px 0 rgba(71, 104, 79, .22); }
+.page-hero-art { width: clamp(120px, 14vw, 186px); flex-shrink: 0; transform: rotate(2.4deg); mix-blend-mode: multiply; }
+@media (max-width: 700px) {
+  .page-hero { flex-direction: column-reverse; align-items: flex-start; gap: 8px; padding: 24px 20px 20px; }
+  .page-hero-art { width: 104px; align-self: flex-end; margin-top: -42px; }
+}
+
+/* 导航与hero动作的精致化 */
+.product-header nav a { text-decoration: none; color: var(--ink-soft); }
+.product-header nav a:hover { color: var(--accent-deep); }
+.product-header nav a[aria-current="page"] { color: var(--seal); text-decoration: underline; text-decoration-thickness: 2.5px; text-underline-offset: 8px; text-decoration-color: var(--highlight); }
+.page-hero-action .primary-action, .page-hero-action a.primary-action { display: inline-flex; width: auto; min-height: 46px; padding: 12px 22px; border-radius: 12px; background: var(--accent); color: var(--on-accent); text-decoration: none; font-weight: 550; box-shadow: 2px 3px 0 rgba(71, 104, 79, .22); }
+
+/* —— 形象切换与hero人物放大 —— */
+.page-hero-side { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; flex-shrink: 0; }
+.page-hero-art { width: clamp(170px, 19vw, 270px); transform: rotate(2.4deg); mix-blend-mode: multiply; transition: transform .25s ease; }
+.page-hero:hover .page-hero-art { transform: rotate(1deg) scale(1.04); }
+.character-switch { display: inline-flex; border: 1.5px solid var(--border); border-radius: 999px; overflow: hidden; background: #fff; }
+.character-switch button { border: 0; background: transparent; padding: 5px 13px; min-height: 30px; font-size: 12.5px; color: var(--ink-soft); box-shadow: none; }
+.character-switch button + button { border-left: 1px solid var(--border-soft); }
+.character-switch button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
+.character-switch button:hover:not(:disabled) { transform: none; box-shadow: none; }
+@media (max-width: 700px) {
+  .page-hero-side { gap: 6px; }
+  .page-hero-art { width: 118px; align-self: flex-end; margin-top: -46px; }
+}

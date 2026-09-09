@@ -1,0 +1,17 @@
+[project]
+name = "second-brain-product-server"
+version = "0.1.0"
+description = "第二大脑产品服务：Django REST/ASGI 与独立 PostgreSQL"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "Django==5.2.17",
+  "djangorestframework==3.17.2",
+  "psycopg[binary]==3.3.5",
+  "uvicorn==0.52.4",
+  "jsonschema==4.26.0",
+  "httpx==0.28.1",
+  "django-otp==1.7.3",
+  "cryptography==50.0.1",
+]
+
+# 应用从源码目录启动；无需构建或安装为全局 Python 包。

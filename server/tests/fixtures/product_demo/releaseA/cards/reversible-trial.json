@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "id": "knowledge.product-a.reversible-trial",
+  "book_id": "book.product-a.trials",
+  "author_id": "author.product-a.trial-writer",
+  "kind": "method",
+  "title": "可撤回试行札记",
+  "statement": "任务难以启动时，在能够撤回且损失可封顶的条件下，先做一次短时试行并检查结果。",
+  "conditions": [
+    "任务迟迟没有开始",
+    "试行能够撤回，损失可以事先封顶"
+  ],
+  "boundaries": [
+    "不可逆后果的步骤不适用；应先判断风险边界。"
+  ],
+  "steps": [
+    "写明要验证的疑问和损失上限",
+    "保留原有材料后执行短时试行",
+    "比较结果，决定继续还是撤回"
+  ],
+  "keywords": [
+    "琥珀试行",
+    "可逆",
+    "启动",
+    "试行"
+  ],
+  "evidence_ids": [
+    "evidence.product-a.reversible-trial"
+  ]
+}

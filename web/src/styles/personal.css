@@ -1,0 +1,23 @@
+/* 个人实践沿用森林绿阅读系统；记录与编辑并置，不以虚构统计装饰页面。 */
+.personal-tabs, .personal-inline { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
+.personal-tabs { border-bottom: 1px solid var(--border); margin-bottom: 30px; padding-bottom: 16px; }
+.personal-tabs a[aria-current="page"] { color: var(--accent); font-weight: 650; text-decoration-thickness: 2px; text-underline-offset: 8px; }
+.personal-inline { margin: 16px 0; font-size: 14px; }
+.personal-inline p { flex-basis: 100%; margin: 0; }
+.personal-records { list-style: none; padding: 0; margin: 0; }
+.personal-record { border-top: 1px solid var(--border); padding: 28px 0; overflow-wrap: anywhere; }
+.personal-record h2 { margin: 0 0 14px; font-size: 23px; line-height: 1.5; }
+.personal-record-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 36px; }
+.personal-record dl { line-height: 1.8; }
+.personal-record dt { color: var(--text-secondary); font-size: 14px; }
+.personal-record dd { margin: 0 0 12px; white-space: pre-wrap; }
+.personal-record form, .personal-feedback form { display: grid; gap: 14px; }
+.personal-record label, .personal-feedback label { display: grid; gap: 7px; font-size: 14px; color: var(--text-secondary); }
+.personal-record textarea, .personal-feedback textarea, .personal-record select, .personal-feedback select { width: 100%; min-height: 46px; background: var(--paper-card); color: var(--ink); border: 1px solid var(--border); border-radius: 6px 12px 6px 10px; padding: 12px; font: inherit; line-height: 1.7; box-shadow: inset 0 1px 4px rgba(90, 76, 52, .06); }
+.personal-record textarea, .personal-feedback textarea { resize: vertical; }
+.personal-record textarea:focus-visible, .personal-feedback textarea:focus-visible, .personal-record select:focus-visible, .personal-feedback select:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.personal-feedback { margin: 28px 0; border-top: 1px solid var(--border); padding-top: 20px; }
+.personal-feedback summary { cursor: pointer; padding: 8px 0; }
+.personal-feedback form { max-width: 640px; padding-top: 14px; }
+.personal-status { color: var(--text-secondary); font-size: 14px; }
+@media (max-width: 767px) { .personal-record-grid { grid-template-columns: minmax(0, 1fr); gap: 16px; } .personal-record h2 { font-size: 20px; } }

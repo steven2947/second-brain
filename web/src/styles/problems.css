@@ -1,0 +1,48 @@
+/* 问题工作区：手帐的问题索引页与书写页。 */
+.problem-shell { max-width: 1160px; }
+.problem-heading-row { display: flex; align-items: center; justify-content: space-between; gap: 24px; border-bottom: 1.5px dashed var(--border); }
+.problem-heading-row .reading-heading { margin-bottom: 24px; }
+.problem-shell .problem-primary-link { display: inline-flex; align-items: center; gap: 10px; min-height: 46px; padding: 12px 20px; border-radius: 12px; background: var(--accent); color: var(--on-accent); text-decoration: none; white-space: nowrap; box-shadow: 2px 3px 0 rgba(71, 104, 79, .22); font-weight: 550; }
+.problem-list { list-style: none; margin: 8px 0; padding: 0; display: grid; gap: 16px; }
+.problem-list li { position: relative; display: flex; justify-content: space-between; align-items: center; gap: 24px; padding: 20px 22px; background: #fff; border: 1px solid var(--border-soft); border-radius: 4px 14px 6px 12px; box-shadow: 0 2px 8px rgba(90, 76, 52, .08); transition: transform .12s ease, box-shadow .12s ease; }
+.problem-list li:hover { transform: translateY(-2px) rotate(-.3deg); box-shadow: 0 5px 14px rgba(90, 76, 52, .13); }
+.problem-list li::before { content: ""; position: absolute; top: -9px; left: 30px; width: 64px; height: 15px; background: var(--tape-dots) center / cover; opacity: .55; transform: rotate(-2deg); border-radius: 2px; pointer-events: none; }
+.problem-list li:nth-child(even)::before { background-image: var(--tape-stripe); transform: rotate(2.2deg); left: auto; right: 30px; }
+.problem-list h2 { font-family: var(--font-serif); font-size: 21px; font-weight: 700; margin: 0 0 10px; line-height: 1.7; }
+.problem-list h2 a { text-decoration: none; color: var(--ink); }
+.problem-list h2 a:hover { color: var(--accent-deep); text-decoration: underline; text-decoration-style: wavy; text-decoration-color: var(--highlight); text-decoration-thickness: 2px; text-underline-offset: 6px; }
+.problem-list p { color: var(--ink-soft); font-size: 13px; line-height: 1.8; margin: 4px 0; }
+.problem-list svg { flex-shrink: 0; color: var(--seal); }
+.problem-compose, .problem-detail { max-width: 830px; margin: 12px auto 0; }
+.problem-form { display: grid; gap: 24px; }
+.problem-form textarea { width: 100%; resize: vertical; min-height: 210px; border: 1px solid var(--border); border-radius: 6px 14px 6px 12px; padding: 18px; font: inherit; font-size: 16px; line-height: 2; color: var(--ink); background: #fff; box-shadow: inset 0 1px 4px rgba(90, 76, 52, .06); }
+.problem-form textarea:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; border-color: var(--accent); }
+.problem-form textarea::placeholder { color: var(--ink-soft); opacity: .8; }
+.problem-form .reading-muted { margin: 0; }
+.problem-form-row { display: grid; grid-template-columns: 1fr 1.3fr; gap: 20px; }
+.problem-form-row select { border: 1px solid var(--border); border-radius: 10px; background: var(--paper-card); color: var(--ink); min-height: 46px; padding: 8px 12px; font: inherit; }
+.problem-notice { border-left: 3px solid var(--accent); padding: 14px 18px; background: var(--paper-warm); font-size: 14px; line-height: 1.85; color: var(--ink-soft); margin: 12px 0; border-radius: 0 10px 10px 0; }
+.problem-notice p { margin: 0; }
+.problem-notice small { display: block; margin-top: 8px; overflow-wrap: anywhere; }
+.problem-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 18px; }
+.problem-original { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 2; font-family: var(--font-serif); font-size: 17px; }
+blockquote.problem-original { border-left: 3px solid var(--seal-soft); margin: 12px 0; padding: 12px 20px; background: rgba(191, 90, 69, .05); border-radius: 0 10px 10px 0; }
+.problem-conversation { border: 1px solid var(--border-soft); padding: 28px; border-radius: 6px 16px 6px 14px; margin: 6px 0 36px; background: var(--paper-card); }
+.problem-conversation svg { color: var(--accent); }
+.problem-conversation h2 { font-family: var(--font-serif); font-size: 20px; line-height: 1.7; }
+.problem-conversation p { font-size: 14px; color: var(--ink-soft); line-height: 1.9; margin-bottom: 0; }
+.problem-rename { display: flex; align-items: end; gap: 15px; margin: 22px 0; }
+.problem-rename input { border: 1px solid var(--border); border-radius: 10px; background: var(--paper-card); color: var(--ink); min-height: 46px; padding: 10px 12px; font: inherit; }
+@media (max-width: 767px) {
+  .problem-heading-row { align-items: start; flex-direction: column; gap: 0; padding-bottom: 24px; }
+  .problem-form-row { grid-template-columns: minmax(0, 1fr); }
+  .problem-conversation { padding: 22px 18px; }
+  .problem-rename { flex-wrap: wrap; }
+  .problem-rename .reading-field { flex-basis: 100%; }
+  .reading-shell .product-header { height: auto; min-height: 72px; flex-wrap: wrap; padding: 12px 0; }
+  .reading-shell .product-header nav { flex-wrap: wrap; }
+}
+
+/* 创建页的书桌插画：贴在表单右上，像手帐里夹的一张照片 */
+.problem-hero { display: block; width: min(100%, 420px); margin: 18px 0 -8px; border: 6px solid #fffdf6; box-shadow: 0 3px 12px rgba(90, 76, 52, .16); transform: rotate(1.2deg); border-radius: 3px; }
+@media (max-width: 767px) { .problem-hero { width: 100%; margin-bottom: 0; } }

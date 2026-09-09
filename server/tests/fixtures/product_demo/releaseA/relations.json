@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "edges": [
+    {
+      "id": "relation.product-a.trial-limited-by-loss",
+      "from": "knowledge.product-a.reversible-trial",
+      "to": "knowledge.product-a.stop-irreversible",
+      "type": "limited_by",
+      "basis": "inference",
+      "rationale": "自编第一本仅允许可撤回且损失可封顶的试行；第二本明确要求在不可逆或损失上限不明时停止。由两段正文推断后一原则限制前一方法的适用范围，属于系统关系标注。",
+      "evidence_ids": [
+        "evidence.product-a.reversible-trial",
+        "evidence.product-a.stop-irreversible"
+      ]
+    }
+  ]
+}

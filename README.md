@@ -1,62 +1,131 @@
-# 第二大脑
+# 第二大脑 · Second Brain
 
-把书籍蒸馏为可追溯的知识，让用户的 AI Agent 运用书中观点分析真实问题。
+> 把一本书蒸馏成可追溯的知识卡，让 AI 用书里的观点回答你的真实问题——**每个答案都有出处**。
 
-## 当前状态
+![书桌手帐](web/public/journal/hero-desk.png)
 
-**《纳瓦尔宝典》单书 MVP 已在本地跑通。** 当前有 109 张知识卡、776 条原文证据、79 条有向关系，以及通用问答 Skill 和一位作者入口。知识来自纳入正文的完整分组阅读，不用模型记忆填充书库。
+**Second Brain** 是一个开源的「个人知识库 + 可审计 AI 问答」全栈项目：
 
-- [开始试用](docs/usage.md)：实际查询命令与 Agent 调用方式。
-- [单书验收报告](docs/mvp-verification.md)：范围、检索复测、真实回答、交付验证和已知不足。
-- [问答示例](docs/mvp-answer-examples.md)：基于真实检索与证据的回答。
-- [可复用蒸馏流程](docs/distillation-workflow.md)：提示词、准备、复核、装配与交付。
-- [自适应澄清接入](docs/adaptive-intake.md)：问题档案、通常3–5轮、最多5轮自由追问、补充事实进入检索与后续分析；本地实现，不影响书籍蒸馏。
-- [采用主张隔离 v3](docs/adopted-claims-v3.md)：本次采用内容与原卡审计分开，保留旧版兼容、充分原理讲解和系统延伸。
-- [产品设计](docs/product-design.md) · [架构](docs/architecture.md) · [开发指南](docs/development.md)。
+- **蒸馏管线**：把整本书逐章提取为结构化知识卡（概念/命题/原理/方法/案例/反例等九类），每张卡绑定**逐字原文锚点**，可回溯到出处
+- **知识库**：版本化发布（完整指纹校验），支持书籍、卡片、关系图谱与原文证据的只读浏览
+- **可审计问答**：AI 回答你的真实问题前会先澄清背景，然后检索知识、逐卡裁决、交叉验证，产出**带引文许可与来源清单**的正式答案
+- **Web 应用**：账号体系（注册邀请/二次验证/找回）、问题档案、对话澄清、行动与收藏、学习练习、隐私与数据导出
+- **手帐风格界面**：暖纸底、白卡呈现、卷发小馆员 IP（女生/男生版可切换），桌面与手机自适应
 
-## 产品组成
+## 它解决什么问题
 
-| 组成 | 用户价值 | 当前状态 |
-| --- | --- | --- |
-| 蒸馏知识库 | 观点、方法、条件、关联和来源证据 | 真实单书已入库，含来源与条件 |
-| 蒸馏工具 | 用户可持续导入自己的书籍 | 仓颉 v2.5.0 与 prepare/assemble/complete/bundle 流程已跑通；本地 v1.2 Markdown 卡片已可编译为候选库 |
-| 查询与调用工具 | 为不同 Agent 提供稳定检索、证据与可审计答案包 | 五项查询 + analyze/validate-analysis 已实现，无需常驻服务 |
-| Agent Skill | 理解问题、逐卡判断、交叉验证并形成建议 | 通用 Skill 使用验证后的调用会话与答案包；纳瓦尔作者入口继续可用 |
+让 AI 读一本书回答问题很容易，但答案经常「编」——
 
-## 快速查询
+Second Brain 的思路是把信任链拆开：
 
-在项目根目录运行：
+1. **先蒸馏**：书 → 知识卡，每张卡声明「作者主张 / 转述他人 / 系统推断」，并附能逐字定位的原文锚点
+2. **再固定**：知识卡通过完整性指纹校验后**版本化发布**，分析期间内容不可变
+3. **后引用**：AI 回答时只能使用给定候选卡与证据，引文必须与原文逐字一致，系统综合必须显式标注——两次结构校验不过就拒绝出答案
+
+所以它给出的每个建议，你都能点回「哪本书、哪张卡、哪句原文」。
+
+## 架构总览
+
+```mermaid
+flowchart LR
+    A[原书文本] -->|九路提取 + 全书综合| B[知识卡 MD]
+    B -->|编译/校验| C[固定知识版本]
+    C -->|登记/导入/权利/发布| D[知识库 API]
+    U[用户提问] --> E[澄清轮]
+    E -->|直接分析| F[检索 + 逐卡裁决]
+    F --> G[答案包 v3 校验]
+    G --> H[正式答案：建议 + 出处 + 行动]
+    H --> I[行动跟进 / 收藏 / 学习]
+```
+
+- `web/` React + Vite 前端（问题档案、对话、答案、书房、学习、账号、管理端）
+- `server/` Django + DRF 服务端（账号/会话、知识授权、问题与消息、租约 worker、逐调用记账、正式答案发布；PostgreSQL + 行级安全）
+- `src/` 领域核心（纯 Python：知识卡加载校验、检索、可审计调用会话与答案包，被服务端以只读适配器调用）
+- `prompts/` 答案编排提示词（v3：显式采用边界 + 逐字引文校验）
+- `schemas/` 知识卡、答案包、证据等版本化 JSON Schema
+- `skills/` 问答 Skill（澄清方法论 Grilling 等）
+- `tools/` 开发运维脚本（数据库引导、OpenAPI 类型生成等）
+- `docs/` 设计文档、验收记录、管理手册
+
+## 快速开始
+
+### 环境要求
+
+- Python 3.12、Node.js 20+、PostgreSQL 16
+- 一个 OpenAI 兼容的对话模型端点（DeepSeek / 豆包 / GLM 等均可，配置见下）
+
+### 1. 知识库 CLI（无需数据库）
 
 ```bash
-.venv-mvp/bin/python -m src.interfaces.cli books
-.venv-mvp/bin/python -m src.interfaces.cli search '如何减少用时间换钱' --expand '代码媒体 杠杆 可复制成果'
+python3.12 -m venv .venv-mvp && .venv-mvp/bin/pip install -r requirements-mvp.lock.txt
+.venv-mvp/bin/python -m src.interfaces.cli books                       # 看书目
+.venv-mvp/bin/python -m src.interfaces.cli search '如何减少用时间换钱' --mode keyword
 ```
 
-环境安装与自检见开发指南。首次向量查询会下载模型文件，文本在本地计算；可用 `--mode keyword` 运行关键词模式。
+仓库自带 `examples/sample-library`（自编示例知识集）；`--library examples/sample-library` 即可体验，无需真实书籍。
 
-当前是 Agent 管理的单书闭环。本地 Markdown 适配器支持一次编译一本或多本候选书，但批量语义验收和正式发布尚未完成。检索复测不是回答准确率证明；自动批量模型调用和多作者综合仍需单独验收。
+### 2. Web 产品（服务端 + 前端）
 
-## 目录
+```bash
+# 数据库引导：自动创建开发实例并生成 .runtime/product.env
+.venv-product/bin/pip install -r server/requirements.lock.txt   # 或先创建 .venv-product
+.venv-product/bin/python tools/dev/product_db.py init            # 见 tools/dev/README.md
 
-```text
-configs/       可提交配置模板与忽略提交的本机配置
-docs/          产品、架构、开发指南、实施及验收记录
-src/           knowledge / distillation / retrieval / interfaces 的实现边界
-skills/        供用户 Agent 加载的问答 Skill
-prompts/       项目自定义的蒸馏补充规则
-schemas/       知识卡片与关系的版本化数据格式
-vendor/        固定版本的仓颉工作副本及锁定信息
-data/          原书引用、规范化正文、书库、索引、任务记录
-examples/      可独立分发的自编测试知识库
-tests/         单元测试、固定检索题集与问答验收题
-tools/dev/     本地盘点与基础检查
-dist/          由白名单构建流程生成的本地试用包
+set -a; source .runtime/product.env; set +a
+.venv-product/bin/python server/manage.py migrate --settings=config.settings.migrate
+
+# 模型接入（任选一家 OpenAI 兼容端点）
+export SB_MODEL_MODE=provider
+export SB_MODEL_NAME=your-model-name
+export SB_MODEL_BASE_URL=https://your-endpoint/v1
+export SB_MODEL_PROVIDER=openai-compatible
+export SB_MODEL_API_KEY=your-key
+
+.venv-product/bin/python -m uvicorn config.asgi:application --app-dir server --port 8019 &
+.venv-product/bin/python server/manage.py runworker &             # 澄清/分析任务处理
+cd web && npm install && npm run dev                              # http://127.0.0.1:5173
 ```
 
-运行数据与交付内容分开管理。产品升级不覆盖用户书库；原书路径和开发缓存不进入默认交付包。
+知识进入产品需走管理链路：**登记来源 → 技术导入 → 权利审核 → 发布 → 对用户授权**（见 [docs/admin-guide.md](docs/admin-guide.md)）。
 
-## GitHub 源码备份范围
+### 3. 测试
 
-私有源码仓库按 `.gitignore` 管理：包含源码、设计和验收文档、通用 Skill、提示词、格式、自编示例与测试。原书、真实生成书库、纳瓦尔生成入口、本机配置、虚拟环境、模型缓存及 ZIP 仍保留本地，不随普通 Git 提交上传。仓颉工作副本按 vendor/cangjie.lock.json 重新获取。
+```bash
+.venv-product/bin/python server/manage.py test server.tests --top-level-directory server --settings=tests.integration_settings
+cd web && npm test
+```
 
-因此，全新克隆后的目录没有本机已验收书库；可先按开发指南安装依赖，使用 `--library examples/sample-library` 验证自编示例，或显式导入自己的书籍。文档中的真实单书统计是本地验收结果，不代表克隆后已包含这些数据。
+前端 197 项 + 服务端 310 项测试覆盖账号、授权、任务租约、答案校验与主要交互流。
+
+## 安全与隐私设计
+
+- 账号：注册邀请制、可选 TOTP 二次验证、恢复码、登录限流；管理员与普通账号完全隔离
+- 数据：PostgreSQL **行级安全**（RLS）按属主隔离；隐私页提供导出、回收站、冷静期注销
+- 知识：固定版本指纹校验、按书授引文长度许可、无授权不出原文
+- 模型：服务端统一配置端点与密钥，用户请求不可注入模型地址；每次调用独立记账
+
+## 内容与版权说明
+
+本仓库开源的是**代码框架、提示词与自编示例**。仓库不含任何原书正文；`examples/` 为自编示例知识集。由使用者自行蒸馏的书籍知识卡与短引，版权归原作者所有，仅限个人学习研究使用，请遵守当地法律并尊重版权。
+
+## 路线图
+
+- [ ] 蒸馏提示词 v2：案例卡四段叙事、条件/边界必填、更厚的原理解释
+- [ ] 语义检索（向量索引）与关键词检索混合
+- [ ] 多书综合分析、跨作者对照
+- [ ] 移动端 PWA
+
+## 文档
+
+| 文档 | 内容 |
+| --- | --- |
+| [docs/product-design.md](docs/product-design.md) | 产品设计与边界 |
+| [docs/architecture.md](docs/architecture.md) | 架构 |
+| [docs/development.md](docs/development.md) | 开发指南 |
+| [docs/admin-guide.md](docs/admin-guide.md) | 管理员手册（MFA、知识发布、模型配置） |
+| [docs/usage.md](docs/usage.md) | CLI 与调用方式 |
+| [docs/distillation-workflow.md](docs/distillation-workflow.md) | 蒸馏工作流 |
+
+## License
+
+代码以 [MIT](LICENSE) 发布。书籍知识卡与短引内容不属于本仓库许可范围，版权归原作者。

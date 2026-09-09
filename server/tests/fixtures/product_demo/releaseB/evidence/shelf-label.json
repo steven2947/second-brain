@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "id": "evidence.product-b.shelf-label",
+  "book_id": "book.product-b.labels",
+  "chapter": "正文",
+  "source_path": "sources/shelf-label.md",
+  "source_sha256": "26abbbd62fe8a247a89c3fc7f0330297da0567e1ff056693e81adc790943571c",
+  "start": 36,
+  "end": 122,
+  "text": "记录架上的物件时，先给每件物品分配唯一短码，再把短码与固定格位一起抄入清单。移动物件后同步更新格位，避免标签仍在而位置已经改变。若多人共用同一格位，应先约定谁负责更新清单。"
+}
