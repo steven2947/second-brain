@@ -9,6 +9,7 @@ from src.knowledge.library import Library, validate_library, publish_library, re
 from src.retrieval.search import SearchEngine
 from src.distillation.jobs import prepare_job, complete_job
 from src.distillation.assemble import assemble_library
+from src.distillation.merge import merge_libraries
 
 
 def _read_input(path, label):
@@ -84,6 +85,11 @@ def main(argv=None):
     related = commands.add_parser('related');related.add_argument('id');related.add_argument('--type');related.add_argument('--hops',type=int,default=1);related.add_argument('--direction',choices=['in','out','both'],default='both')
     validate = commands.add_parser('validate');validate.add_argument('path')
     publish = commands.add_parser('publish');publish.add_argument('candidate')
+    merge_candidates = commands.add_parser('merge-candidates')
+    merge_candidates.add_argument('--candidate', action='append', required=True)
+    merge_candidates.add_argument('--destination', required=True)
+    merge_candidates.add_argument('--library-id', required=True)
+    merge_candidates.add_argument('--release-status', choices=['evaluation_candidate', 'accepted_candidate'], default='evaluation_candidate')
     prepare = commands.add_parser('prepare');prepare.add_argument('--source',required=True);prepare.add_argument('--scope',required=True);prepare.add_argument('--jobs-root',default='data/jobs/prepared');prepare.add_argument('--prompts-root',default='prompts/distillation')
     assemble = commands.add_parser('assemble');assemble.add_argument('--document',required=True);assemble.add_argument('--output',action='append',required=True);assemble.add_argument('--destination',required=True)
     complete = commands.add_parser('complete');complete.add_argument('--job',required=True);complete.add_argument('--output',action='append',required=True);complete.add_argument('--candidate',required=True)
@@ -107,6 +113,8 @@ def main(argv=None):
         version = None
         if args.command == 'validate':result = validate_library(args.path)
         elif args.command == 'publish':result = publish_library(args.candidate,args.library)
+        elif args.command == 'merge-candidates':
+            result = merge_libraries(args.candidate, args.destination, args.library_id, args.release_status)
         elif args.command == 'prepare':result = prepare_job(args.source,read_json(args.scope),args.jobs_root,args.prompts_root)
         elif args.command == 'assemble':result = assemble_library(args.document,args.output,args.destination)
         elif args.command == 'complete':result = complete_job(args.job,args.output,args.candidate)
