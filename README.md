@@ -126,6 +126,10 @@ cd web && npm test
 | [docs/usage.md](docs/usage.md) | CLI 与调用方式 |
 | [docs/distillation-workflow.md](docs/distillation-workflow.md) | 蒸馏工作流 |
 
-## License
+## 许可证
 
-代码以 [MIT](LICENSE) 发布。书籍知识卡与短引内容不属于本仓库许可范围，版权归原作者。
+本项目由 StevenHe（GitHub：`steven2947`）原创的代码框架、提示词、文档与自编示例采用 [Apache License 2.0](LICENSE)。
+
+允许商业使用、修改、复制和分发；再分发时请保留 `LICENSE`、`NOTICE` 及原有版权/归属声明，修改过的文件应标明修改。项目名称和标识不随本许可证授权为商标使用权。完整条款见 [`LICENSE`](LICENSE) 和 [`NOTICE`](NOTICE)。
+
+书籍知识卡、短引、原书及用户导入内容不属于本项目许可范围，以各自权利人、许可证或权利声明为准。
